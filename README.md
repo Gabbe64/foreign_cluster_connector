@@ -55,7 +55,7 @@ kubectl apply -f clusterrole.yaml
 #### 5. **Deploy the controller manager in the central cluster**
 
 ```sh
-make deploy IMG=vnc-controller:latest
+make deploy
 ```
 
 ---
