@@ -1,0 +1,9 @@
+apiVersion: networking.liqo.io/v1beta1
+kind: VirtualNodeConnection
+metadata:
+  labels:
+    app.kubernetes.io/name: controller
+    app.kubernetes.io/managed-by: kustomize
+  name: virtualnodeconnection-sample
+spec:
+  # TODO(user): Add fields here

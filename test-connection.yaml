@@ -1,0 +1,9 @@
+apiVersion: networking.liqo.io/v1beta1
+kind: VirtualNodeConnection
+metadata:
+  name: test-connection
+spec:
+  virtualNodeA: "europe-rome-edge"
+  kubeconfigA: "kubeconfig-europe-rome-edge"
+  virtualNodeB: "europe-milan-edge"
+  kubeconfigB: "kubeconfig-europe-milan-edge"

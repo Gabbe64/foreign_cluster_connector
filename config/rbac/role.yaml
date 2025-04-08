@@ -1,0 +1,40 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.liqo.io
+  resources:
+  - virtualnodeconnections
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - networking.liqo.io
+  resources:
+  - virtualnodeconnections/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - networking.liqo.io
+  resources:
+  - virtualnodeconnections/status
+  verbs:
+  - get
+  - patch
+  - update
