@@ -6,7 +6,7 @@ domain: liqo.io
 layout:
 - go.kubebuilder.io/v4
 projectName: controller
-repo: github.com/nates110/vnc-controller
+repo: github.com/scal110/foreign_cluster_connector
 resources:
 - api:
     crdVersion: v1
@@ -15,6 +15,6 @@ resources:
   domain: liqo.io
   group: networking
   kind: VirtualNodeConnection
-  path: github.com/nates110/vnc-controller/api/v1beta1
+  path: github.com/scal110/foreign_cluster_connector/api/v1beta1
   version: v1beta1
 version: "3"

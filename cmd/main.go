@@ -25,8 +25,8 @@ import (
 	networkingv1beta1_1 "github.com/liqotech/liqo/apis/networking/v1beta1"
 	offloadingv1beta1 "github.com/liqotech/liqo/apis/offloading/v1beta1"
 
-	networkingv1beta1 "github.com/nates110/vnc-controller/api/v1beta1"
-	"github.com/nates110/vnc-controller/internal/controller"
+	networkingv1beta1 "github.com/scal110/foreign_cluster_connector/api/v1beta1"
+	"github.com/scal110/foreign_cluster_connector/internal/controller"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"

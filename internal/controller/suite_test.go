@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	networkingv1beta1 "github.com/nates110/vnc-controller/api/v1beta1"
+	networkingv1beta1 "github.com/scal110/foreign_cluster_connector/api/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"

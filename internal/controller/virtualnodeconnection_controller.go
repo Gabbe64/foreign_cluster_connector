@@ -27,7 +27,7 @@ import (
 	"github.com/liqotech/liqo/pkg/liqoctl/factory"
 	"github.com/liqotech/liqo/pkg/liqoctl/network"
 	"github.com/liqotech/liqo/pkg/liqoctl/output"
-	networkingv1alpha1 "github.com/nates110/vnc-controller/api/v1beta1"
+	networkingv1alpha1 "github.com/scal110/foreign_cluster_connector/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
