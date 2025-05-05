@@ -1,19 +1,25 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"os"
 
+	liqov1beta1 "github.com/liqotech/liqo/apis/core/v1beta1"
 	"github.com/spf13/cobra"
-	"github.com/liqotech/liqo/pkg/liqoctl/factory"
-	"github.com/liqotech/liqo/apis/discovery/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var foreignClustersCmd = &cobra.Command{
 	Use:   "foreignclusters",
-	Short: "Stampa un saluto",
-	Run: func(cmd *cobra.Command, args []string) error {
-		return listForeignClusters()
+	Short: "List all ForeignClusters in the current Kubernetes cluster",
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := listForeignClusters(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 	},
 }
 
@@ -22,34 +28,41 @@ func init() {
 }
 
 func listForeignClusters() error {
-	// Creiamo una factory per il client del cluster locale
-	f, err := factory.NewForLocal()
+	ctx := context.Background()
+
+	// Recupera la configurazione K8s
+	cfg, err := ctrl.GetConfig()
 	if err != nil {
-		return fmt.Errorf("errore nella creazione della factory: %w", err)
+		return fmt.Errorf("unable to get kubeconfig: %w", err)
 	}
 
-	// Otteniamo un client Kubernetes dal factory
-	k8sClient, err := f.NewControllerRuntimeClient()
+	// Registra lo schema Liqo
+	scheme := runtime.NewScheme()
+	if err := liqov1beta1.AddToScheme(scheme); err != nil {
+		return fmt.Errorf("unable to add Liqo schema: %w", err)
+	}
+
+	// Crea il client
+	cl, err := client.New(cfg, client.Options{Scheme: scheme})
 	if err != nil {
-		return fmt.Errorf("errore nella creazione del client: %w", err)
+		return fmt.Errorf("unable to create client: %w", err)
 	}
 
-	// Otteniamo la lista di ForeignCluster
-	var fcList v1.ForeignClusterList
-	if err := k8sClient.List(context.TODO(), &fcList, &client.ListOptions{}); err != nil {
-		return fmt.Errorf("errore nel recupero dei ForeignClusters: %w", err)
+	// Lista i ForeignClusters
+	var fcList liqov1beta1.ForeignClusterList
+	if err := cl.List(ctx, &fcList); err != nil {
+		return fmt.Errorf("unable to list ForeignClusters: %w", err)
 	}
 
-	// Verifica se ci sono ForeignClusters e stampa i risultati
 	if len(fcList.Items) == 0 {
-		fmt.Println("Nessun ForeignCluster trovato.")
+		fmt.Println("No ForeignClusters found.")
 		return nil
 	}
 
-	// Stampa i ForeignClusters
-	fmt.Println("ForeignClusters trovati:")
+	// Stampa i risultati
 	for _, fc := range fcList.Items {
-		fmt.Printf("- %s (ClusterID: %s)\n", fc.Name, fc.Spec.ClusterIdentity.ClusterID)
+		fmt.Printf("- Name: %s\n  ClusterID: %s\n  Namespace: %s\n",
+			fc.Name, fc.Spec.ClusterIdentity.ClusterID, fc.Namespace)
 	}
 
 	return nil
