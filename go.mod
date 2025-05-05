@@ -1,4 +1,4 @@
-module github.com/nates110/vnc-controller
+module github.com/scal110/foreign_cluster_connector
 
 go 1.24.1
 
