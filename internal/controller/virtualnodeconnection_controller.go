@@ -278,60 +278,65 @@ func (r *VirtualNodeConnectionReconciler) updateStatus(ctx context.Context, conn
 
 // disconnectLiqoctl esegue il comando "liqoctl network disconnect" per disconnettere i nodi
 func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context, connection *networkingv1alpha1.VirtualNodeConnection) error {
-	logger := log.FromContext(ctx)
-	logger.Info("Avvio disconnessione", "name", connection.Name)
+    logger := log.FromContext(ctx)
+    logger.Info("Avvio disconnessione", "name", connection.Name)
 
-	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeA)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(kubeconfigA)
+    // Recupera i kubeconfig
+    kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeA)
+    if err != nil {
+        return err
+    }
+    defer os.Remove(kubeconfigA)
 
-	kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeB)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(kubeconfigB)
+    kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeB)
+    if err != nil {
+        return err
+    }
+    defer os.Remove(kubeconfigB)
 
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
+    // Timeout sul contesto
+    ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+    defer cancel()
 
-	// Imposta la variabile d'ambiente KUBECONFIG e crea la factory per il cluster locale
-	os.Setenv("KUBECONFIG", kubeconfigA)
-	localFactory := factory.NewForLocal()
-	if err := localFactory.Initialize(); err != nil {
-		return fmt.Errorf("errore nell'inizializzazione della localFactory: %v", err)
-	}
+    // Inizializza le factory
+    os.Setenv("KUBECONFIG", kubeconfigA)
+    localFactory := factory.NewForLocal()
+    if err := localFactory.Initialize(); err != nil {
+        return fmt.Errorf("errore nella inizializzazione della localFactory: %v", err)
+    }
 
-	// Imposta la variabile d'ambiente KUBECONFIG e crea la factory per il cluster remoto
-	os.Setenv("KUBECONFIG", kubeconfigB)
-	remoteFactory := factory.NewForRemote()
-	if err := remoteFactory.Initialize(); err != nil {
-		return fmt.Errorf("errore nell'inizializzazione della remoteFactory: %v", err)
-	}
+    os.Setenv("KUBECONFIG", kubeconfigB)
+    remoteFactory := factory.NewForRemote()
+    if err := remoteFactory.Initialize(); err != nil {
+        return fmt.Errorf("errore nella inizializzazione della remoteFactory: %v", err)
+    }
 
-	os.Setenv("KUBECONFIG", kubeconfigA)
+    // Crea i due cluster helper (senza toccare i namespace tenant)
+    cluster1, err := network.NewCluster(ctx, localFactory, remoteFactory, false)
+    if err != nil {
+        return fmt.Errorf("errore nella creazione di cluster1 per disconnect: %v", err)
+    }
+    cluster2, err := network.NewCluster(ctx, remoteFactory, localFactory, false)
+    if err != nil {
+        return fmt.Errorf("errore nella creazione di cluster2 per disconnect: %v", err)
+    }
 
-	// Crea le opzioni per il comando "network connect"
-	opts := network.NewOptions(localFactory)
-	opts.RemoteFactory = remoteFactory
-	// Timeout, wait, skip-validation e altri parametri possono essere impostati anch'essi:
-	opts.Timeout = 120 * time.Second
-	opts.Wait = true
-	localFactory.Printer = output.NewLocalPrinter(true, true)
-	remoteFactory.Printer = output.NewRemotePrinter(true, true)
+    // Configura le opzioni
+    opts := network.NewOptions(localFactory)
+    opts.RemoteFactory = remoteFactory
+    opts.Timeout = 120 * time.Second
+    opts.Wait = true
+    localFactory.Printer = output.NewLocalPrinter(true, true)
+    remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
-	fmt.Println("Esecuzione del comando 'network disconnect'...")
-	if err := opts.RunDisconnect(ctx); err != nil {
-		return fmt.Errorf("errore durante l'esecuzione di 'network connect': %v", err)
-	}
+    // Esegui il solo disconnect (toglie client/server ma lascia intatta la network-config)
+    fmt.Println("Esecuzione del comando 'network disconnect'...")
+    if err := opts.RunDisconnect(ctx, cluster1, cluster2); err != nil {
+        return fmt.Errorf("errore durante l'esecuzione di 'network disconnect': %v", err)
+    }
 
-	fmt.Println("Operazione 'network disconnect' completata con successo.")
-	return nil
-
-	//	logger.Info("Disconnessione completata", "nodeA", connection.Spec.VirtualNodeA, "nodeB", connection.Spec.VirtualNodeB)
-
-	// return nil
+    fmt.Println("Operazione 'network disconnect' completata con successo.")
+    return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
