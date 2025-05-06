@@ -311,6 +311,8 @@ func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context,
 
 	os.Setenv("KUBECONFIG", kubeconfigA)
 
+	localFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.VirtualNodeB)
+	remoteFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.VirtualNodeA)
 	// Crea le opzioni per il comando "network connect"
 	opts := network.NewOptions(localFactory)
 	opts.RemoteFactory = remoteFactory
