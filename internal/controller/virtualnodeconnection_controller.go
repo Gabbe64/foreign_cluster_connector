@@ -173,7 +173,8 @@ func (r *VirtualNodeConnectionReconciler) executeLiqoctlConnect(ctx context.Cont
 	}
 
 	os.Setenv("KUBECONFIG", kubeconfigA)
-
+	localFactory.Namespace = ""
+	remoteFactory.Namespace = ""
 	// Crea le opzioni per il comando "network connect"
 	opts := network.NewOptions(localFactory)
 	opts.RemoteFactory = remoteFactory
@@ -311,8 +312,6 @@ func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context,
 
 	os.Setenv("KUBECONFIG", kubeconfigA)
 
-	localFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.VirtualNodeB)
-	remoteFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.VirtualNodeA)
 	// Crea le opzioni per il comando "network connect"
 	opts := network.NewOptions(localFactory)
 	opts.RemoteFactory = remoteFactory
@@ -322,12 +321,12 @@ func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context,
 	localFactory.Printer = output.NewLocalPrinter(true, true)
 	remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
-	fmt.Println("Esecuzione del comando 'network reset'...")
-	if err := opts.RunReset(ctx); err != nil {
+	fmt.Println("Esecuzione del comando 'network disconnect'...")
+	if err := opts.RunDisconnect(ctx); err != nil {
 		return fmt.Errorf("errore durante l'esecuzione di 'network connect': %v", err)
 	}
 
-	fmt.Println("Operazione 'network reset' completata con successo.")
+	fmt.Println("Operazione 'network disconnect' completata con successo.")
 	return nil
 
 	//	logger.Info("Disconnessione completata", "nodeA", connection.Spec.VirtualNodeA, "nodeB", connection.Spec.VirtualNodeB)

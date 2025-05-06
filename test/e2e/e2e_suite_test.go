@@ -22,9 +22,9 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/scal110/foreign_cluster_connector/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/scal110/foreign_cluster_connector/test/utils"
 )
 
 var (
