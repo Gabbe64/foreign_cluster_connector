@@ -311,6 +311,8 @@ func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context,
         return fmt.Errorf("errore nella inizializzazione della remoteFactory: %v", err)
     }
 
+    localFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.VirtualNodeB)
+    remoteFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.VirtualNodeA)
 
     // Configura le opzioni
     opts := network.NewOptions(localFactory)
