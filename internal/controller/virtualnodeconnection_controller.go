@@ -311,15 +311,6 @@ func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context,
         return fmt.Errorf("errore nella inizializzazione della remoteFactory: %v", err)
     }
 
-    // Crea i due cluster helper (senza toccare i namespace tenant)
-    cluster1, err := network.NewCluster(ctx, localFactory, remoteFactory, false)
-    if err != nil {
-        return fmt.Errorf("errore nella creazione di cluster1 per disconnect: %v", err)
-    }
-    cluster2, err := network.NewCluster(ctx, remoteFactory, localFactory, false)
-    if err != nil {
-        return fmt.Errorf("errore nella creazione di cluster2 per disconnect: %v", err)
-    }
 
     // Configura le opzioni
     opts := network.NewOptions(localFactory)
@@ -330,12 +321,12 @@ func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context,
     remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
     // Esegui il solo disconnect (toglie client/server ma lascia intatta la network-config)
-    fmt.Println("Esecuzione del comando 'network disconnect'...")
-    if err := opts.RunDisconnect(ctx, cluster1, cluster2); err != nil {
-        return fmt.Errorf("errore durante l'esecuzione di 'network disconnect': %v", err)
+    fmt.Println("Esecuzione del comando 'network reset'...")
+    if err := opts.RunReset(ctx); err != nil {
+        return fmt.Errorf("errore durante l'esecuzione di 'network reset': %v", err)
     }
 
-    fmt.Println("Operazione 'network disconnect' completata con successo.")
+    fmt.Println("Operazione 'network reset' completata con successo.")
     return nil
 }
 
