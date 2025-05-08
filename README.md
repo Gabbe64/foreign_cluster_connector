@@ -1,7 +1,6 @@
 # Foreign Cluster Connector
 
-**Foreign Cluster Connector** is a Kubebuilder-based Liqo feature that runs in the **central Liqo cluster** and manages a direct network peering between two Liqo-peered **leaf clusters**. Integrated into Liqo’s control-plane, it leverages Liqo’s networking stack to optimize east–west traffic and maintain a seamless multi-cluster environment.
-
+**Foreign Cluster Connector** is a Kubebuilder-based Liqo feature that runs in the **central Liqo cluster** and manages a direct network connection between two **leaf clusters**. 
 ---
 
 ## Description
@@ -10,8 +9,6 @@ This proof-of-concept controller watches a `VirtualNodeConnection` CR in the cen
 
 - **On Create**: establishes a direct Liqo tunnel between two specified leaf clusters.  
 - **On Delete**: gracefully tears down only that tunnel, preserving all other Liqo network configurations.
-
-**Note:** Must run inside the central Liqo control-plane. Requires Liqo components on all participating clusters.
 
 ---
 
