@@ -1,12 +1,15 @@
+## Description
+
+This is an initial implementation of the feature.............., intended to test its behavior and provide a working proof of concept.
+
+The controller must be deployed in the **central cluster**, where it will be responsible for creating a direct network connection between the two leaf clusters. It is triggered by the creation or deletion of a custom resource (CR) that contains all necessary metadata to establish the connection. The CR must be created within the central cluster.
+
 # Controller
 
 This project was created using **Kubebuilder**. Its purpose is to allow a central Kubernetes cluster — peered with two leaf clusters — to establish a direct connection between the leaf clusters. This connection optimizes network traffic and reduces the load on the central cluster.
 
-## Description
+#Advantages and Limitations
 
-This is an initial implementation of the feature, intended to test its behavior and provide a working proof of concept.
-
-The controller must be deployed in the **central cluster**, where it will be responsible for creating a direct network connection between the two leaf clusters. It is triggered by the creation or deletion of a custom resource (CR) that contains all necessary metadata to establish the connection. The CR must be created within the central cluster.
 
 ## Getting Started
 
