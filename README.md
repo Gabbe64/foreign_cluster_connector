@@ -1,14 +1,49 @@
+# Foreign Cluster Connector
+
+**Foreign Cluster Connector** is a Kubebuilder-based Liqo feature that runs in the **central Liqo cluster** and manages a direct network peering between two Liqo-peered **leaf clusters**. Integrated into Liqo’s control-plane, it leverages Liqo’s networking stack to optimize east–west traffic and maintain a seamless multi-cluster environment.
+
+---
+
 ## Description
 
-This is an initial implementation of the feature.............., intended to test its behavior and provide a working proof of concept.
+This proof-of-concept controller watches a `VirtualNodeConnection` CR in the central cluster and:
 
-The controller must be deployed in the **central cluster**, where it will be responsible for creating a direct network connection between the two leaf clusters. It is triggered by the creation or deletion of a custom resource (CR) that contains all necessary metadata to establish the connection. The CR must be created within the central cluster.
+- **On Create**: establishes a direct Liqo tunnel between two specified leaf clusters.  
+- **On Delete**: gracefully tears down only that tunnel, preserving all other Liqo network configurations.
 
-# Controller
+**Note:** Must run inside the central Liqo control-plane. Requires Liqo components on all participating clusters.
 
-This project was created using **Kubebuilder**. Its purpose is to allow a central Kubernetes cluster — peered with two leaf clusters — to establish a direct connection between the leaf clusters. This connection optimizes network traffic and reduces the load on the central cluster.
+---
 
-#Advantages and Limitations
+## Features
+
+- **Native Liqo Integration**: Adds a `VirtualNodeConnection` CRD and controller logic to Liqo.  
+- **Automated Tenant Namespaces**: Creates `liqo-tenant-<clusterID>` namespaces to isolate per-connection resources.  
+- **Selective Teardown**: Uses finalizers to disconnect a single peering without impacting others.  
+- **Declarative Workflow**: Entire lifecycle managed by applying or deleting one CR.
+
+---
+
+## Advantages & Benefits
+
+- **Optimized Multi-Cluster Traffic**: Leaf clusters communicate directly, avoiding double-hop through the central control-plane.  
+- **Scoped Impact**: Only the targeted peering link is modified, preserving all other Liqo-managed tunnels.  
+- **Kubernetes-Native**: Fully declarative via Liqo CRDs and finalizers—fits seamlessly into GitOps workflows.  
+- **Centralized Awareness**: Central cluster gains visibility into direct leaf-to-leaf connections without altering global routing.  
+- **Future-Proof Foundation**: Lays groundwork for conditional IP propagation and dynamic routing optimizations.  
+- **Automation & Simplification**: Eliminates manual tracking of cluster-to-cluster network shortcuts.  
+- **Improved Network Coherence**: Ensures consistent CIDR remapping and avoids configuration drift.
+
+---
+
+## Next Steps & Future Use Cases
+
+Building on this, future enhancements could include:
+
+- **Conditional IP Propagation**: IPAM and virtual-kubelet can choose direct IP propagation when a `VirtualNodeConnection` exists, instead of indirect paths through the central cluster.  
+- **Dynamic Routing Optimization**: Allow Liqo’s routing logic to prefer direct leaf-to-leaf tunnels over indirect overlays, further reducing latency and load.
+
+---
 
 
 ## Getting Started
