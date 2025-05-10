@@ -43,9 +43,9 @@ type ForeignClusterConnectionReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=networking.liqo.io,resources=ForeignClusterConnections,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=networking.liqo.io,resources=ForeignClusterConnections/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=networking.liqo.io,resources=ForeignClusterConnections/finalizers,verbs=update
+// +kubebuilder:rbac:groups=networking.liqo.io,resources=foreignclusterconnections,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=networking.liqo.io,resources=foreignclusterconnections/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=networking.liqo.io,resources=foreignclusterconnections/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -58,7 +58,7 @@ type ForeignClusterConnectionReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.2/pkg/reconcile
 
-const finalizerName = "ForeignClusterConnection.finalizers.networking.liqo.io"
+const finalizerName = "foreignclusterconnection.finalizers.networking.liqo.io"
 
 // Reconcile gestisce la creazione e la cancellazione delle ForeignClusterConnection
 func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
