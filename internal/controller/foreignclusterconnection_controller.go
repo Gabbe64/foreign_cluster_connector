@@ -99,7 +99,7 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 
 	// Se i nodi sono già connessi, non eseguire ulteriori azioni
 	if connection.Status.IsConnected {
-		logger.Info("Nodi già connessi", "nodeA", connection.Spec.VirtualNodeA, "nodeB", connection.Spec.VirtualNodeB)
+		logger.Info("Nodi già connessi", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 		return ctrl.Result{}, nil
 	}
 
@@ -117,7 +117,7 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 		}
 	}
 
-	logger.Info("Avvio connessione", "nodeA", connection.Spec.VirtualNodeA, "nodeB", connection.Spec.VirtualNodeB)
+	logger.Info("Avvio connessione", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 	if err := r.updateStatus(ctx, &connection, "Connecting", ""); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -130,7 +130,7 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 		return ctrl.Result{}, err
 	}
 
-	logger.Info("Connessione riuscita", "nodeA", connection.Spec.VirtualNodeA, "nodeB", connection.Spec.VirtualNodeB)
+	logger.Info("Connessione riuscita", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 	if err := r.updateStatus(ctx, &connection, "Connected", ""); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -140,17 +140,17 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 
 // executeLiqoctlConnect esegue il comando "liqoctl network connect" utilizzando i kubeconfig recuperati
 func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) (string, error) {
-	// Recupera il kubeconfig per VirtualNodeA
-	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeA)
+	// Recupera il kubeconfig per ForeignClusterA
+	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
 	if err != nil {
-		return "", fmt.Errorf("errore nel recupero del kubeconfig per VirtualNodeA: %v", err)
+		return "", fmt.Errorf("errore nel recupero del kubeconfig per ForeignClusterA: %v", err)
 	}
 	defer os.Remove(kubeconfigA)
 
-	// Recupera il kubeconfig per VirtualNodeB
-	kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeB)
+	// Recupera il kubeconfig per ForeignClusterB
+	kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterB)
 	if err != nil {
-		return "", fmt.Errorf("errore nel recupero del kubeconfig per VirtualNodeB: %v", err)
+		return "", fmt.Errorf("errore nel recupero del kubeconfig per ForeignClusterB: %v", err)
 	}
 	defer os.Remove(kubeconfigB)
 
@@ -216,10 +216,10 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 
 // getKubeconfigFromLiqo recupera il kubeconfig dal Secret associato al virtual node,
 // ne modifica il namespace nel contesto corrente e lo salva in un file temporaneo.
-func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.Context, virtualNode string) (string, error) {
+func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.Context, ForeignCluster string) (string, error) {
 	// Costruisce namespace e nome del secret in base al virtual node.
-	namespace := fmt.Sprintf("liqo-tenant-%s", virtualNode)
-	secretName := fmt.Sprintf("kubeconfig-controlplane-%s", virtualNode)
+	namespace := fmt.Sprintf("liqo-tenant-%s", ForeignCluster)
+	secretName := fmt.Sprintf("kubeconfig-controlplane-%s", ForeignCluster)
 
 	var secret corev1.Secret
 	if err := r.Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretName}, &secret); err != nil {
@@ -252,7 +252,7 @@ func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.C
 	}
 
 	// Salva il kubeconfig modificato in un file temporaneo.
-	kubeconfigPath := filepath.Join(os.TempDir(), fmt.Sprintf("kubeconfig-%s.yaml", virtualNode))
+	kubeconfigPath := filepath.Join(os.TempDir(), fmt.Sprintf("kubeconfig-%s.yaml", ForeignCluster))
 	if err := os.WriteFile(kubeconfigPath, modifiedData, 0600); err != nil {
 		return "", fmt.Errorf("Errore nella scrittura del file kubeconfig: %v", err)
 	}
@@ -282,13 +282,13 @@ func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Conte
     logger.Info("Avvio disconnessione", "name", connection.Name)
 
     // Recupera i kubeconfig
-    kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeA)
+    kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
     if err != nil {
         return err
     }
     defer os.Remove(kubeconfigA)
 
-    kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeB)
+    kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterB)
     if err != nil {
         return err
     }
@@ -311,8 +311,8 @@ func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Conte
         return fmt.Errorf("errore nella inizializzazione della remoteFactory: %v", err)
     }
 
-    localFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.VirtualNodeB)
-    remoteFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.VirtualNodeA)
+    localFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterB)
+    remoteFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterA)
 
     // Configura le opzioni
     opts := network.NewOptions(localFactory)
