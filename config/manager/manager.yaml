@@ -11,7 +11,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: liqo-shortcutmanager
-  namespace: system
+  namespace: liqo-shortcutmanager-system
   labels:
     control-plane: liqo-shorcutmanager
     app.kubernetes.io/name: liqo-shorcutmanager
