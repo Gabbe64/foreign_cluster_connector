@@ -14,7 +14,7 @@ resources:
   controller: true
   domain: liqo.io
   group: networking
-  kind: VirtualNodeConnection
+  kind: ForeignClusterConnection
   path: github.com/scal110/foreign_cluster_connector/api/v1beta1
   version: v1beta1
 version: "3"

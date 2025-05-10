@@ -9,9 +9,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/name: controller
+    app.kubernetes.io/name: liqo-shortcutmanagers
     app.kubernetes.io/managed-by: kustomize
-  name: virtualnodeconnection-editor-role
+  name: foreignclusterconnection-editor-role
 rules:
 - apiGroups:
   - networking.liqo.io

@@ -14,8 +14,8 @@ spec:
     listKind: ForeignClusterConnectionList
     plural: foreignclusterconnections
     shortNames:
-    - vnc
-    - vnconnection
+    - fcc
+    - foreignclusterconnection
     singular: ForeignClusterConnection
   scope: Namespaced
   versions:
@@ -61,10 +61,8 @@ spec:
               virtualNodeB:
                 type: string
             required:
-            - kubeconfigA
-            - kubeconfigB
-            - virtualNodeA
-            - virtualNodeB
+            - foreignClusterA
+            - foreignClusterB
             type: object
           status:
             description: ForeignClusterConnectionStatus defines the observed state of

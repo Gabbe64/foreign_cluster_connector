@@ -2,14 +2,14 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app.kubernetes.io/name: controller
+    app.kubernetes.io/name: liqo-shortcutmanager
     app.kubernetes.io/managed-by: kustomize
-  name: manager-rolebinding
+  name: liqo-shortcutmanager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: manager-role
+  name: liqo-shortcutmanager-role
 subjects:
 - kind: ServiceAccount
-  name: controller-manager
-  namespace: system
+  name: liqo-shortcutmanager
+  namespace: liqo-shortcutmanager-system

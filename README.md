@@ -5,7 +5,7 @@
 
 ## Description
 
-This proof-of-concept controller watches a `VirtualNodeConnection` CR in the central cluster and:
+This proof-of-concept controller watches a `ForeignClusterConnection` CR in the central cluster and:
 
 - **On Create**: establishes a direct Liqo tunnel between two specified leaf clusters.  
 - **On Delete**: gracefully tears down only that tunnel, preserving all other Liqo network configurations.
@@ -14,7 +14,7 @@ This proof-of-concept controller watches a `VirtualNodeConnection` CR in the cen
 
 ## Features
 
-- **Native Liqo Integration**: Adds a `VirtualNodeConnection` CRD and controller logic to Liqo.  
+- **Native Liqo Integration**: Adds a `ForeignClusterConnection` CRD and controller logic to Liqo.  
 - **Automated Tenant Namespaces**: Creates `liqo-tenant-<clusterID>` namespaces to isolate per-connection resources.  
 - **Selective Teardown**: Uses finalizers to disconnect a single peering without impacting others.  
 - **Declarative Workflow**: Entire lifecycle managed by applying or deleting one CR.
@@ -37,7 +37,7 @@ This proof-of-concept controller watches a `VirtualNodeConnection` CR in the cen
 
 Building on this, future enhancements could include:
 
-- **Conditional IP Propagation**: IPAM and virtual-kubelet can choose direct IP propagation when a `VirtualNodeConnection` exists, instead of indirect paths through the central cluster.  
+- **Conditional IP Propagation**: IPAM and virtual-kubelet can choose direct IP propagation when a `ForeignClusterConnection` exists, instead of indirect paths through the central cluster.  
 - **Dynamic Routing Optimization**: Allow Liqo’s routing logic to prefer direct leaf-to-leaf tunnels over indirect overlays, further reducing latency and load.
 
 ---
