@@ -15,7 +15,7 @@ rules:
 - apiGroups:
   - networking.liqo.io
   resources:
-  - virtualnodeconnections
+  - foreignclusterconnections
   verbs:
   - create
   - delete
@@ -27,13 +27,13 @@ rules:
 - apiGroups:
   - networking.liqo.io
   resources:
-  - virtualnodeconnections/finalizers
+  - foreignclusterconnections/finalizers
   verbs:
   - update
 - apiGroups:
   - networking.liqo.io
   resources:
-  - virtualnodeconnections/status
+  - foreignclusterconnections/status
   verbs:
   - get
   - patch

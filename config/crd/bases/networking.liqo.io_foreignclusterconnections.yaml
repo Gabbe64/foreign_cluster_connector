@@ -4,19 +4,19 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.2
-  name: virtualnodeconnections.networking.liqo.io
+  name: foreignclusterconnections.networking.liqo.io
 spec:
   group: networking.liqo.io
   names:
     categories:
     - liqo
-    kind: VirtualNodeConnection
-    listKind: VirtualNodeConnectionList
-    plural: virtualnodeconnections
+    kind: ForeignClusterConnection
+    listKind: ForeignClusterConnectionList
+    plural: foreignclusterconnections
     shortNames:
     - vnc
     - vnconnection
-    singular: virtualnodeconnection
+    singular: ForeignClusterConnection
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -29,7 +29,7 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
-        description: VirtualNodeConnection is the Schema for the virtualnodeconnections
+        description: ForeignClusterConnection is the Schema for the foreignclusterconnections
           API.
         properties:
           apiVersion:
@@ -50,7 +50,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: VirtualNodeConnectionSpec defines the desired state of VirtualNodeConnection.
+            description: ForeignClusterConnectionSpec defines the desired state of ForeignClusterConnection.
             properties:
               kubeconfigA:
                 type: string
@@ -67,8 +67,8 @@ spec:
             - virtualNodeB
             type: object
           status:
-            description: VirtualNodeConnectionStatus defines the observed state of
-              VirtualNodeConnection.
+            description: ForeignClusterConnectionStatus defines the observed state of
+              ForeignClusterConnection.
             properties:
               errorMessage:
                 description: ErrorMessage contiene eventuali messaggi di errore.

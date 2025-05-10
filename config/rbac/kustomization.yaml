@@ -22,7 +22,7 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the {{ .ProjectName }} itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
-- virtualnodeconnection_admin_role.yaml
-- virtualnodeconnection_editor_role.yaml
-- virtualnodeconnection_viewer_role.yaml
+- foreignclusterconnection_admin_role.yaml
+- foreignclusterconnection_editor_role.yaml
+- foreignclusterconnection_viewer_role.yaml
 

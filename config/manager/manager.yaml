@@ -2,33 +2,33 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    control-plane: controller-manager
-    app.kubernetes.io/name: controller
+    control-plane: liqo-shorcutmanager
+    app.kubernetes.io/name: liqo-shorcutmanager
     app.kubernetes.io/managed-by: kustomize
-  name: system
+  name: liqo-shortcutmanager-system
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
+  name: liqo-shortcutmanager
   namespace: system
   labels:
-    control-plane: controller-manager
-    app.kubernetes.io/name: controller
+    control-plane: liqo-shorcutmanager
+    app.kubernetes.io/name: liqo-shorcutmanager
     app.kubernetes.io/managed-by: kustomize
 spec:
   selector:
     matchLabels:
-      control-plane: controller-manager
-      app.kubernetes.io/name: controller
+      control-plane: liqo-shorcutmanager
+      app.kubernetes.io/name: liqo-shorcutmanager
   replicas: 1
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: controller-manager
-        app.kubernetes.io/name: controller
+        control-plane: liqo-shorcutmanager
+        app.kubernetes.io/name: liqo-shorcutmanager
     spec:
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression
       # according to the platforms which are supported by your solution.
@@ -63,9 +63,9 @@ spec:
         args:
           - --leader-elect
           - --health-probe-bind-address=:8081
-        image: controller:latest
+        image: liqo-shortcutmanager:latest #image: <TUO_REGISTRY>/liqo-shortcutmanager:latest
         imagePullPolicy: IfNotPresent
-        name: manager
+        name: liqo-shorcutmanager
         ports: []
         securityContext:
           allowPrivilegeEscalation: false
@@ -95,5 +95,5 @@ spec:
             memory: 64Mi
         volumeMounts: []
       volumes: []
-      serviceAccountName: controller-manager
+      serviceAccountName: liqo-shorcutmanager
       terminationGracePeriodSeconds: 10

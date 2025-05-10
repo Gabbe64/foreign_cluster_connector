@@ -23,16 +23,14 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// VirtualNodeConnectionSpec defines the desired state of VirtualNodeConnection.
-type VirtualNodeConnectionSpec struct {
-	VirtualNodeA string `json:"virtualNodeA"`
-	KubeconfigA  string `json:"kubeconfigA"`
-	VirtualNodeB string `json:"virtualNodeB"`
-	KubeconfigB  string `json:"kubeconfigB"`
+// ForeignClusterConnectionSpec defines the desired state of ForeignClusterConnection.
+type ForeignClusterConnectionSpec struct {
+	ForeignClusterA string `json:"foreignClusterA"`
+	ForeignClusterB string `json:"foreignClusterB"`
 }
 
-// VirtualNodeConnectionStatus defines the observed state of VirtualNodeConnection.
-type VirtualNodeConnectionStatus struct {
+// ForeignClusterConnectionStatus defines the observed state of ForeignClusterConnection.
+type ForeignClusterConnectionStatus struct {
 	// IsConnected indica se i nodi sono connessi.
 	IsConnected bool `json:"isConnected"`
 	// LastUpdated rappresenta il timestamp dell'ultimo aggiornamento dello stato.
@@ -45,27 +43,27 @@ type VirtualNodeConnectionStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:categories=liqo,shortName=vnc;vnconnection
+// +kubebuilder:resource:categories=liqo,shortName=fcc;fcconnection
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 // +kubebuilder:printcolumn:name="Connected",type=boolean,JSONPath=`.status.isConnected`
-// VirtualNodeConnection is the Schema for the virtualnodeconnections API.
-type VirtualNodeConnection struct {
+// ForeignClusterConnection is the Schema for the foreignclusterconnections API.
+type ForeignClusterConnection struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   VirtualNodeConnectionSpec   `json:"spec,omitempty"`
-	Status VirtualNodeConnectionStatus `json:"status,omitempty"`
+	Spec   ForeignClusterConnectionSpec   `json:"spec,omitempty"`
+	Status ForeignClusterConnectionStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// VirtualNodeConnectionList contains a list of VirtualNodeConnection.
-type VirtualNodeConnectionList struct {
+// ForeignClusterConnectionList contains a list of ForeignClusterConnection.
+type ForeignClusterConnectionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []VirtualNodeConnection `json:"items"`
+	Items           []ForeignClusterConnection `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&VirtualNodeConnection{}, &VirtualNodeConnectionList{})
+	SchemeBuilder.Register(&ForeignClusterConnection{}, &ForeignClusterConnectionList{})
 }

@@ -37,35 +37,35 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// VirtualNodeConnectionReconciler reconciles a VirtualNodeConnection object
-type VirtualNodeConnectionReconciler struct {
+// ForeignClusterConnectionReconciler reconciles a ForeignClusterConnection object
+type ForeignClusterConnectionReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=networking.liqo.io,resources=virtualnodeconnections,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=networking.liqo.io,resources=virtualnodeconnections/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=networking.liqo.io,resources=virtualnodeconnections/finalizers,verbs=update
+// +kubebuilder:rbac:groups=networking.liqo.io,resources=ForeignClusterConnections,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=networking.liqo.io,resources=ForeignClusterConnections/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=networking.liqo.io,resources=ForeignClusterConnections/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the VirtualNodeConnection object against the actual cluster state, and then
+// the ForeignClusterConnection object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.2/pkg/reconcile
 
-const finalizerName = "virtualnodeconnection.finalizers.networking.liqo.io"
+const finalizerName = "ForeignClusterConnection.finalizers.networking.liqo.io"
 
-// Reconcile gestisce la creazione e la cancellazione delle VirtualNodeConnection
-func (r *VirtualNodeConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+// Reconcile gestisce la creazione e la cancellazione delle ForeignClusterConnection
+func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	logger.Info("Reconciling VirtualNodeConnection", "namespace", req.Namespace, "name", req.Name)
+	logger.Info("Reconciling ForeignClusterConnection", "namespace", req.Namespace, "name", req.Name)
 
-	var connection networkingv1alpha1.VirtualNodeConnection
+	var connection networkingv1alpha1.ForeignClusterConnection
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
 		// Se la risorsa non viene trovata, non è necessario riconciliarla ulteriormente.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -73,7 +73,7 @@ func (r *VirtualNodeConnectionReconciler) Reconcile(ctx context.Context, req ctr
 
 	// Se l'oggetto è in fase di eliminazione, esegui la disconnessione
 	if !connection.ObjectMeta.DeletionTimestamp.IsZero() {
-		logger.Info("VirtualNodeConnection è in fase di eliminazione, avvio disconnessione", "name", req.Name)
+		logger.Info("ForeignClusterConnection è in fase di eliminazione, avvio disconnessione", "name", req.Name)
 		if err := r.disconnectLiqoctl(ctx, &connection); err != nil {
 			logger.Error(err, "Errore durante la disconnessione")
 			return ctrl.Result{}, err
@@ -84,7 +84,7 @@ func (r *VirtualNodeConnectionReconciler) Reconcile(ctx context.Context, req ctr
 		if err := r.Update(ctx, &connection); err != nil {
 			return ctrl.Result{}, err
 		}
-		logger.Info("Finalizer rimosso, VirtualNodeConnection può essere eliminata", "name", req.Name)
+		logger.Info("Finalizer rimosso, ForeignClusterConnection può essere eliminata", "name", req.Name)
 		return ctrl.Result{}, nil
 	}
 
@@ -105,7 +105,7 @@ func (r *VirtualNodeConnectionReconciler) Reconcile(ctx context.Context, req ctr
 
 	// Inizializza lo stato se non è stato impostato
 	if connection.Status.Phase == "" {
-		connection.Status = networkingv1alpha1.VirtualNodeConnectionStatus{
+		connection.Status = networkingv1alpha1.ForeignClusterConnectionStatus{
 			IsConnected:  false,
 			LastUpdated:  time.Now().Format(time.RFC3339),
 			Phase:        "Pending",
@@ -139,7 +139,7 @@ func (r *VirtualNodeConnectionReconciler) Reconcile(ctx context.Context, req ctr
 }
 
 // executeLiqoctlConnect esegue il comando "liqoctl network connect" utilizzando i kubeconfig recuperati
-func (r *VirtualNodeConnectionReconciler) executeLiqoctlConnect(ctx context.Context, connection *networkingv1alpha1.VirtualNodeConnection) (string, error) {
+func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) (string, error) {
 	// Recupera il kubeconfig per VirtualNodeA
 	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.VirtualNodeA)
 	if err != nil {
@@ -216,7 +216,7 @@ func (r *VirtualNodeConnectionReconciler) executeLiqoctlConnect(ctx context.Cont
 
 // getKubeconfigFromLiqo recupera il kubeconfig dal Secret associato al virtual node,
 // ne modifica il namespace nel contesto corrente e lo salva in un file temporaneo.
-func (r *VirtualNodeConnectionReconciler) getKubeconfigFromLiqo(ctx context.Context, virtualNode string) (string, error) {
+func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.Context, virtualNode string) (string, error) {
 	// Costruisce namespace e nome del secret in base al virtual node.
 	namespace := fmt.Sprintf("liqo-tenant-%s", virtualNode)
 	secretName := fmt.Sprintf("kubeconfig-controlplane-%s", virtualNode)
@@ -260,8 +260,8 @@ func (r *VirtualNodeConnectionReconciler) getKubeconfigFromLiqo(ctx context.Cont
 	return kubeconfigPath, nil
 }
 
-// updateStatus aggiorna lo stato dell'oggetto VirtualNodeConnection utilizzando una patch per evitare conflitti
-func (r *VirtualNodeConnectionReconciler) updateStatus(ctx context.Context, connection *networkingv1alpha1.VirtualNodeConnection, phase, errorMsg string) error {
+// updateStatus aggiorna lo stato dell'oggetto ForeignClusterConnection utilizzando una patch per evitare conflitti
+func (r *ForeignClusterConnectionReconciler) updateStatus(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection, phase, errorMsg string) error {
 	patch := client.MergeFrom(connection.DeepCopy())
 
 	connection.Status.Phase = phase
@@ -277,7 +277,7 @@ func (r *VirtualNodeConnectionReconciler) updateStatus(ctx context.Context, conn
 }
 
 // disconnectLiqoctl esegue il comando "liqoctl network disconnect" per disconnettere i nodi
-func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context, connection *networkingv1alpha1.VirtualNodeConnection) error {
+func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) error {
     logger := log.FromContext(ctx)
     logger.Info("Avvio disconnessione", "name", connection.Name)
 
@@ -333,9 +333,9 @@ func (r *VirtualNodeConnectionReconciler) disconnectLiqoctl(ctx context.Context,
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *VirtualNodeConnectionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *ForeignClusterConnectionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&networkingv1alpha1.VirtualNodeConnection{}).
-		Named("virtualnodeconnection").
+		For(&networkingv1alpha1.ForeignClusterConnection{}).
+		Named("ForeignClusterConnection").
 		Complete(r)
 }

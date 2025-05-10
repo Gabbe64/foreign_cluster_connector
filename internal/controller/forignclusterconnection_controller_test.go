@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ = Describe("VirtualNodeConnection Controller", func() {
+var _ = Describe("ForeignClusterConnection Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
 
@@ -38,13 +38,13 @@ var _ = Describe("VirtualNodeConnection Controller", func() {
 			Name:      resourceName,
 			Namespace: "default", // TODO(user):Modify as needed
 		}
-		virtualnodeconnection := &networkingv1beta1.VirtualNodeConnection{}
+		foreignclusterconnection := &networkingv1beta1.ForeignClusterConnection{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind VirtualNodeConnection")
-			err := k8sClient.Get(ctx, typeNamespacedName, virtualnodeconnection)
+			By("creating the custom resource for the Kind ForeignClusterConnection")
+			err := k8sClient.Get(ctx, typeNamespacedName, foreignclusterconnection)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &networkingv1beta1.VirtualNodeConnection{
+				resource := &networkingv1beta1.ForeignClusterConnection{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
@@ -57,16 +57,16 @@ var _ = Describe("VirtualNodeConnection Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &networkingv1beta1.VirtualNodeConnection{}
+			resource := &networkingv1beta1.ForeignClusterConnection{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Cleanup the specific resource instance VirtualNodeConnection")
+			By("Cleanup the specific resource instance ForeignClusterConnection")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			controllerReconciler := &VirtualNodeConnectionReconciler{
+			controllerReconciler := &ForeignClusterConnectionReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
