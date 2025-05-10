@@ -6,7 +6,7 @@ namespace: liqo-shortcutmanager-system
 # "wordpress" becomes "alices-wordpress".
 # Note that it should also match with the prefix (text before '-') of the namespace
 # field above.
-namePrefix: controller-
+namePrefix: liqo-
 
 # Labels to add to all resources and selectors.
 #labels:
