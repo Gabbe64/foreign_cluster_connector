@@ -210,11 +210,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controller.VirtualNodeConnectionReconciler{
+	if err = (&controller.ForeignClusterConnectionReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "VirtualNodeConnection")
+		setupLog.Error(err, "unable to create controller", "controller", "ForeignClusterConnection")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
