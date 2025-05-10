@@ -52,13 +52,9 @@ spec:
           spec:
             description: ForeignClusterConnectionSpec defines the desired state of ForeignClusterConnection.
             properties:
-              kubeconfigA:
+              foreignClusterA:
                 type: string
-              kubeconfigB:
-                type: string
-              virtualNodeA:
-                type: string
-              virtualNodeB:
+              foreignClusterB:
                 type: string
             required:
             - foreignClusterA
