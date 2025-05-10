@@ -25,7 +25,7 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/default-container: manager
+        kubectl.kubernetes.io/default-container: liqo-shortcutmanager
       labels:
         control-plane: liqo-shortcutmanager
         app.kubernetes.io/name: liqo-shortcutmanager
