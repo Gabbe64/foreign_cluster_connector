@@ -2,8 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    control-plane: liqo-shorcutmanager
-    app.kubernetes.io/name: liqo-shorcutmanager
+    control-plane: liqo-shortcutmanager
+    app.kubernetes.io/name: liqo-shortcutmanager
     app.kubernetes.io/managed-by: kustomize
   name: liqo-shortcutmanager-system
 ---
@@ -13,22 +13,22 @@ metadata:
   name: liqo-shortcutmanager
   namespace: liqo-shortcutmanager-system
   labels:
-    control-plane: liqo-shorcutmanager
-    app.kubernetes.io/name: liqo-shorcutmanager
+    control-plane: liqo-shortcutmanager
+    app.kubernetes.io/name: liqo-shortcutmanager
     app.kubernetes.io/managed-by: kustomize
 spec:
   selector:
     matchLabels:
-      control-plane: liqo-shorcutmanager
-      app.kubernetes.io/name: liqo-shorcutmanager
+      control-plane: liqo-shortcutmanager
+      app.kubernetes.io/name: liqo-shortcutmanager
   replicas: 1
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: liqo-shorcutmanager
-        app.kubernetes.io/name: liqo-shorcutmanager
+        control-plane: liqo-shortcutmanager
+        app.kubernetes.io/name: liqo-shortcutmanager
     spec:
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression
       # according to the platforms which are supported by your solution.
@@ -65,7 +65,7 @@ spec:
           - --health-probe-bind-address=:8081
         image: liqo-shortcutmanager:latest #image: <TUO_REGISTRY>/liqo-shortcutmanager:latest
         imagePullPolicy: IfNotPresent
-        name: liqo-shorcutmanager
+        name: liqo-shortcutmanager
         ports: []
         securityContext:
           allowPrivilegeEscalation: false
@@ -95,5 +95,5 @@ spec:
             memory: 64Mi
         volumeMounts: []
       volumes: []
-      serviceAccountName: liqo-shorcutmanager
+      serviceAccountName: liqo-shortcutmanager
       terminationGracePeriodSeconds: 10
