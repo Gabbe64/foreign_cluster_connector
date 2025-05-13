@@ -86,7 +86,7 @@ spec:
                     type: integer
                   serverGatewayType:
                     type: string
-                  serverServicePort:
+                  serverServicePorty:
                     format: int32
                     type: integer
                   serverServiceType:
@@ -100,10 +100,24 @@ spec:
                     type: integer
                   wait:
                     type: boolean
+                required:
+                - clientGatewayType
+                - clientTemplateName
+                - clientTemplateNamespace
+                - disableSharingKeys
+                - mtu
+                - serverGatewayType
+                - serverServicePorty
+                - serverServiceType
+                - serverTemplateName
+                - serverTemplateNamespace
+                - timeoutSeconds
+                - wait
                 type: object
             required:
             - foreignClusterA
             - foreignClusterB
+            - networking
             type: object
           status:
             description: ForeignClusterConnectionStatus defines the observed state
