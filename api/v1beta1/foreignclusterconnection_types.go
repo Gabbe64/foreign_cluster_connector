@@ -36,7 +36,7 @@ type NetworkingConfig struct {
 	ServerTemplateName      string `json:"serverTemplateName"`
 	ServerTemplateNamespace string `json:"serverTemplateNamespace"`
 	ServerServiceType       string `json:"serverServiceType"`
-	ServerServicePort       int32  `json:"serverServicePorty"`
+	ServerServicePort       int32  `json:"serverServicePort"`
 
 	ClientGatewayType       string `json:"clientGatewayType"`
 	ClientTemplateName      string `json:"clientTemplateName"`
