@@ -22,8 +22,6 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/liqotech/liqo/pkg/liqo-controller-manager/networking/forge"
 	"github.com/liqotech/liqo/pkg/liqoctl/factory"
 	"github.com/liqotech/liqo/pkg/liqoctl/network"
 	"github.com/liqotech/liqo/pkg/liqoctl/output"
@@ -196,7 +194,7 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 	opts.ClientTemplateName = netCfg.ClientTemplateName
 	opts.ClientTemplateNamespace = netCfg.ClientTemplateNamespace
 
-	opts.MTU = netCfg.MTU
+	opts.MTU = int(netCfg.MTU)
 	opts.DisableSharingKeys = netCfg.DisableSharingKeys
 	opts.Timeout = timeout
 	opts.Wait = netCfg.Wait
