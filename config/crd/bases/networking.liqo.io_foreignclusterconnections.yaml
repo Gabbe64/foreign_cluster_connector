@@ -15,17 +15,29 @@ spec:
     plural: foreignclusterconnections
     shortNames:
     - fcc
-    - foreignclusterconnection
+    - fcconnection
     singular: foreignclusterconnection
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.phase
-      name: Phase
+    - jsonPath: .spec.foreignClusterA
+      name: ClusterA
+      type: string
+    - jsonPath: .spec.foreignClusterB
+      name: ClusterB
       type: string
     - jsonPath: .status.isConnected
       name: Connected
       type: boolean
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.remoteClusterA.podCIDR
+      name: A-CIDR
+      type: string
+    - jsonPath: .status.remoteClusterB.podCIDR
+      name: B-CIDR
+      type: string
     name: v1beta1
     schema:
       openAPIV3Schema:
@@ -50,33 +62,87 @@ spec:
           metadata:
             type: object
           spec:
-            description: ForeignClusterConnectionSpec defines the desired state of ForeignClusterConnection.
+            description: ForeignClusterConnectionSpec defines the desired state of
+              ForeignClusterConnection.
             properties:
               foreignClusterA:
                 type: string
               foreignClusterB:
                 type: string
+              networking:
+                description: NetworkingConfig describes configuration flags for setting
+                  up the virtual connection.
+                properties:
+                  clientGatewayType:
+                    type: string
+                  clientTemplateName:
+                    type: string
+                  clientTemplateNamespace:
+                    type: string
+                  disableSharingKeys:
+                    type: boolean
+                  mtu:
+                    format: int32
+                    type: integer
+                  serverGatewayType:
+                    type: string
+                  serverServicePort:
+                    format: int32
+                    type: integer
+                  serverServiceType:
+                    type: string
+                  serverTemplateName:
+                    type: string
+                  serverTemplateNamespace:
+                    type: string
+                  timeoutSeconds:
+                    format: int32
+                    type: integer
+                  wait:
+                    type: boolean
+                type: object
             required:
             - foreignClusterA
             - foreignClusterB
             type: object
           status:
-            description: ForeignClusterConnectionStatus defines the observed state of
-              ForeignClusterConnection.
+            description: ForeignClusterConnectionStatus defines the observed state
+              of ForeignClusterConnection.
             properties:
               errorMessage:
-                description: ErrorMessage contiene eventuali messaggi di errore.
                 type: string
               isConnected:
-                description: IsConnected indica se i nodi sono connessi.
                 type: boolean
               lastUpdated:
-                description: LastUpdated rappresenta il timestamp dell'ultimo aggiornamento
-                  dello stato.
                 type: string
               phase:
-                description: Phase rappresenta la fase corrente del processo di connessione.
                 type: string
+              remoteClusterA:
+                description: ClusterNetworkingStatus describes resolved values for
+                  CIDR handling between clusters.
+                properties:
+                  externalCIDR:
+                    type: string
+                  podCIDR:
+                    type: string
+                  remappedExternalCIDR:
+                    type: string
+                  remappedPodCIDR:
+                    type: string
+                type: object
+              remoteClusterB:
+                description: ClusterNetworkingStatus describes resolved values for
+                  CIDR handling between clusters.
+                properties:
+                  externalCIDR:
+                    type: string
+                  podCIDR:
+                    type: string
+                  remappedExternalCIDR:
+                    type: string
+                  remappedPodCIDR:
+                    type: string
+                type: object
             required:
             - isConnected
             type: object

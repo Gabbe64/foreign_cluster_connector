@@ -19,9 +19,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-	"time"
 	"github.com/liqotech/liqo/pkg/liqoctl/factory"
 	"github.com/liqotech/liqo/pkg/liqoctl/network"
 	"github.com/liqotech/liqo/pkg/liqoctl/output"
@@ -29,10 +26,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
+	"os"
+	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"time"
 )
 
 // ForeignClusterConnectionReconciler reconciles a ForeignClusterConnection object
@@ -283,58 +283,58 @@ func (r *ForeignClusterConnectionReconciler) updateStatus(ctx context.Context, c
 
 // disconnectLiqoctl esegue il comando "liqoctl network disconnect" per disconnettere i nodi
 func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) error {
-    logger := log.FromContext(ctx)
-    logger.Info("Avvio disconnessione", "name", connection.Name)
+	logger := log.FromContext(ctx)
+	logger.Info("Avvio disconnessione", "name", connection.Name)
 
-    // Recupera i kubeconfig
-    kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
-    if err != nil {
-        return err
-    }
-    defer os.Remove(kubeconfigA)
+	// Recupera i kubeconfig
+	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfigA)
 
-    kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterB)
-    if err != nil {
-        return err
-    }
-    defer os.Remove(kubeconfigB)
+	kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterB)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfigB)
 
-    // Timeout sul contesto
-    ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-    defer cancel()
+	// Timeout sul contesto
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
-    // Inizializza le factory
-    os.Setenv("KUBECONFIG", kubeconfigA)
-    localFactory := factory.NewForLocal()
-    if err := localFactory.Initialize(); err != nil {
-        return fmt.Errorf("errore nella inizializzazione della localFactory: %v", err)
-    }
+	// Inizializza le factory
+	os.Setenv("KUBECONFIG", kubeconfigA)
+	localFactory := factory.NewForLocal()
+	if err := localFactory.Initialize(); err != nil {
+		return fmt.Errorf("errore nella inizializzazione della localFactory: %v", err)
+	}
 
-    os.Setenv("KUBECONFIG", kubeconfigB)
-    remoteFactory := factory.NewForRemote()
-    if err := remoteFactory.Initialize(); err != nil {
-        return fmt.Errorf("errore nella inizializzazione della remoteFactory: %v", err)
-    }
+	os.Setenv("KUBECONFIG", kubeconfigB)
+	remoteFactory := factory.NewForRemote()
+	if err := remoteFactory.Initialize(); err != nil {
+		return fmt.Errorf("errore nella inizializzazione della remoteFactory: %v", err)
+	}
 
-    localFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterB)
-    remoteFactory.Namespace=fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterA)
+	localFactory.Namespace = fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterB)
+	remoteFactory.Namespace = fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterA)
 
-    // Configura le opzioni
-    opts := network.NewOptions(localFactory)
-    opts.RemoteFactory = remoteFactory
-    opts.Timeout = 120 * time.Second
-    opts.Wait = true
-    localFactory.Printer = output.NewLocalPrinter(true, true)
-    remoteFactory.Printer = output.NewRemotePrinter(true, true)
+	// Configura le opzioni
+	opts := network.NewOptions(localFactory)
+	opts.RemoteFactory = remoteFactory
+	opts.Timeout = 120 * time.Second
+	opts.Wait = true
+	localFactory.Printer = output.NewLocalPrinter(true, true)
+	remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
-    // Esegui il solo disconnect (toglie client/server ma lascia intatta la network-config)
-    fmt.Println("Esecuzione del comando 'network reset'...")
-    if err := opts.RunReset(ctx); err != nil {
-        return fmt.Errorf("errore durante l'esecuzione di 'network reset': %v", err)
-    }
+	// Esegui il solo disconnect (toglie client/server ma lascia intatta la network-config)
+	fmt.Println("Esecuzione del comando 'network reset'...")
+	if err := opts.RunReset(ctx); err != nil {
+		return fmt.Errorf("errore durante l'esecuzione di 'network reset': %v", err)
+	}
 
-    fmt.Println("Operazione 'network reset' completata con successo.")
-    return nil
+	fmt.Println("Operazione 'network reset' completata con successo.")
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

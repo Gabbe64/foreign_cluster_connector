@@ -29,21 +29,21 @@ type ForeignClusterConnectionSpec struct {
 
 // NetworkingConfig describes configuration flags for setting up the virtual connection.
 type NetworkingConfig struct {
-	MTU                   int32  `json:"mtu,omitempty"`
-	DisableSharingKeys    bool   `json:"disableSharingKeys,omitempty"`
+	MTU                int32 `json:"mtu,omitempty"`
+	DisableSharingKeys bool  `json:"disableSharingKeys,omitempty"`
 
-	ServerGatewayType     string `json:"serverGatewayType,omitempty"`
-	ServerTemplateName     string `json:"serverTemplateName,omitempty"`
+	ServerGatewayType       string `json:"serverGatewayType,omitempty"`
+	ServerTemplateName      string `json:"serverTemplateName,omitempty"`
 	ServerTemplateNamespace string `json:"serverTemplateNamespace,omitempty"`
-	ServerServiceType      string `json:"serverServiceType,omitempty"`
-	ServerServicePort      int32  `json:"serverServicePort,omitempty"`
+	ServerServiceType       string `json:"serverServiceType,omitempty"`
+	ServerServicePort       int32  `json:"serverServicePort,omitempty"`
 
-	ClientGatewayType      string `json:"clientGatewayType,omitempty"`
-	ClientTemplateName     string `json:"clientTemplateName,omitempty"`
+	ClientGatewayType       string `json:"clientGatewayType,omitempty"`
+	ClientTemplateName      string `json:"clientTemplateName,omitempty"`
 	ClientTemplateNamespace string `json:"clientTemplateNamespace,omitempty"`
 
-	TimeoutSeconds         int32  `json:"timeoutSeconds,omitempty"`
-	Wait                   bool   `json:"wait,omitempty"`
+	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty"`
+	Wait           bool  `json:"wait,omitempty"`
 }
 
 // ForeignClusterConnectionStatus defines the observed state of ForeignClusterConnection.
@@ -59,10 +59,10 @@ type ForeignClusterConnectionStatus struct {
 
 // ClusterNetworkingStatus describes resolved values for CIDR handling between clusters.
 type ClusterNetworkingStatus struct {
-	PodCIDR           string `json:"podCIDR,omitempty"`
-	ExternalCIDR      string `json:"externalCIDR,omitempty"`
-	RemappedPodCIDR   string `json:"remappedPodCIDR,omitempty"`
-	RemappedExtCIDR   string `json:"remappedExternalCIDR,omitempty"`
+	PodCIDR         string `json:"podCIDR,omitempty"`
+	ExternalCIDR    string `json:"externalCIDR,omitempty"`
+	RemappedPodCIDR string `json:"remappedPodCIDR,omitempty"`
+	RemappedExtCIDR string `json:"remappedExternalCIDR,omitempty"`
 }
 
 // +kubebuilder:object:root=true
