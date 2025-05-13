@@ -119,11 +119,7 @@ spec:
                 description: ClusterNetworkingStatus describes resolved values for
                   CIDR handling between clusters.
                 properties:
-                  externalCIDR:
-                    type: string
                   podCIDR:
-                    type: string
-                  remappedExternalCIDR:
                     type: string
                   remappedPodCIDR:
                     type: string
@@ -132,11 +128,7 @@ spec:
                 description: ClusterNetworkingStatus describes resolved values for
                   CIDR handling between clusters.
                 properties:
-                  externalCIDR:
-                    type: string
                   podCIDR:
-                    type: string
-                  remappedExternalCIDR:
                     type: string
                   remappedPodCIDR:
                     type: string
