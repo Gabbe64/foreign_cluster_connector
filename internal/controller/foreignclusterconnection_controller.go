@@ -265,8 +265,8 @@ func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfo(ctx context.Contex
 
 	// Prende il primo CR valido
 	netCfg := networkList.Items[0]
-	result.PodCIDR = netCfg.Spec.Cidr
-	result.RemappedPodCIDR = netCfg.Status.Cidr
+	result.PodCIDR = netCfg.Spec.CIDR
+	result.RemappedPodCIDR = netCfg.Status.CIDR
 
 	return result, nil
 }
