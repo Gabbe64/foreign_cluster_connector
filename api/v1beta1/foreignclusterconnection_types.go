@@ -24,24 +24,20 @@ import (
 type ForeignClusterConnectionSpec struct {
 	ForeignClusterA string           `json:"foreignClusterA"`
 	ForeignClusterB string           `json:"foreignClusterB"`
-	Networking      NetworkingConfig `json:"networking"`
+	Networking      NetworkingConfig `json:"networking,omitempty"`
 }
 
 // NetworkingConfig describes configuration flags for setting up the virtual connection.
 type NetworkingConfig struct {
 	MTU                int32 `json:"mtu,omitempty"`
-	DisableSharingKeys bool  `json:"disableSharingKeys,omitempty"`
-
 	ServerGatewayType       string `json:"serverGatewayType,omitempty"`
 	ServerTemplateName      string `json:"serverTemplateName,omitempty"`
 	ServerTemplateNamespace string `json:"serverTemplateNamespace,omitempty"`
 	ServerServiceType       string `json:"serverServiceType,omitempty"`
 	ServerServicePort       int32  `json:"serverServicePort,omitempty"`
-
 	ClientGatewayType       string `json:"clientGatewayType,omitempty"`
 	ClientTemplateName      string `json:"clientTemplateName,omitempty"`
 	ClientTemplateNamespace string `json:"clientTemplateNamespace,omitempty"`
-
 	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty"`
 	Wait           bool  `json:"wait,omitempty"`
 }

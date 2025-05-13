@@ -195,7 +195,7 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 	opts.ClientTemplateNamespace = netCfg.ClientTemplateNamespace
 
 	opts.MTU = int(netCfg.MTU)
-	opts.DisableSharingKeys = netCfg.DisableSharingKeys
+	opts.DisableSharingKeys = false
 	opts.Timeout = timeout
 	opts.Wait = netCfg.Wait
 
