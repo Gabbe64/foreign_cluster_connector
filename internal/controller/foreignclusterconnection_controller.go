@@ -217,6 +217,10 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 		return "", fmt.Errorf("errore durante 'network connect': %v", err)
 	}
 
+	if err:= populateCIDRsFromNetworkConfig(ctx,connection); err != nil {
+		return "", fmt.Errorf("Impossibile caricare le Cidr : %v", err)
+	}
+
 
 	return "Operazione 'network connect' completata con successo.", nil
 }
