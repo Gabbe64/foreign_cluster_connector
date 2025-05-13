@@ -16,7 +16,7 @@ spec:
     shortNames:
     - fcc
     - foreignclusterconnection
-    singular: ForeignClusterConnection
+    singular: foreignclusterconnection
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
