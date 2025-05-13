@@ -79,8 +79,6 @@ spec:
                     type: string
                   clientTemplateNamespace:
                     type: string
-                  disableSharingKeys:
-                    type: boolean
                   mtu:
                     format: int32
                     type: integer
@@ -104,7 +102,6 @@ spec:
             required:
             - foreignClusterA
             - foreignClusterB
-            - networking
             type: object
           status:
             description: ForeignClusterConnectionStatus defines the observed state
