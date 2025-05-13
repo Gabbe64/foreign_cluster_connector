@@ -86,7 +86,7 @@ spec:
                     type: integer
                   serverGatewayType:
                     type: string
-                  serverServicePorty:
+                  serverServicePort:
                     format: int32
                     type: integer
                   serverServiceType:
@@ -107,7 +107,7 @@ spec:
                 - disableSharingKeys
                 - mtu
                 - serverGatewayType
-                - serverServicePorty
+                - serverServicePort
                 - serverServiceType
                 - serverTemplateName
                 - serverTemplateNamespace
