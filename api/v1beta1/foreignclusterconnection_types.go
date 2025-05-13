@@ -67,7 +67,7 @@ type ClusterNetworkingStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster,singular=foreignclusterconnection,categories=liqo,shortName=fcc;fcconnection
+// +kubebuilder:resource:singular=foreignclusterconnection,categories=liqo,shortName=fcc;fcconnection
 // +kubebuilder:printcolumn:name="ClusterA",type=string,JSONPath=`.spec.foreignClusterA`
 // +kubebuilder:printcolumn:name="ClusterB",type=string,JSONPath=`.spec.foreignClusterB`
 // +kubebuilder:printcolumn:name="Connected",type=boolean,JSONPath=`.status.isConnected`
