@@ -56,9 +56,7 @@ type ForeignClusterConnectionStatus struct {
 // ClusterNetworkingStatus describes resolved values for CIDR handling between clusters.
 type ClusterNetworkingStatus struct {
 	PodCIDR         string `json:"podCIDR,omitempty"`
-	ExternalCIDR    string `json:"externalCIDR,omitempty"`
 	RemappedPodCIDR string `json:"remappedPodCIDR,omitempty"`
-	RemappedExtCIDR string `json:"remappedExternalCIDR,omitempty"`
 }
 
 // +kubebuilder:object:root=true

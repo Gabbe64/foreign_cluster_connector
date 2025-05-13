@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	ipamv1alpha1 "github.com/liqotech/liqo/apis/ipam/v1alpha1"
 	"github.com/liqotech/liqo/pkg/liqoctl/factory"
 	"github.com/liqotech/liqo/pkg/liqoctl/network"
 	"github.com/liqotech/liqo/pkg/liqoctl/output"
@@ -216,9 +217,59 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 		return "", fmt.Errorf("errore durante 'network connect': %v", err)
 	}
 
+
 	return "Operazione 'network connect' completata con successo.", nil
 }
 
+func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) error {
+	update := connection.DeepCopy()
+
+	// Recupera CIDR del cluster B nel cluster A (tenant-B è in cluster-A)
+	cidrA, err := r.retrieveCIDRInfo(ctx, connection.Spec.ForeignClusterB)
+	if err != nil {
+		return fmt.Errorf("errore nel recupero CIDR da cluster A (tenant-B): %w", err)
+	}
+
+	// Recupera CIDR del cluster A nel cluster B (tenant-A è in cluster-B)
+	cidrB, err := r.retrieveCIDRInfo(ctx, connection.Spec.ForeignClusterA)
+	if err != nil {
+		return fmt.Errorf("errore nel recupero CIDR da cluster B (tenant-A): %w", err)
+	}
+
+	update.Status.RemoteClusterA = cidrA
+	update.Status.RemoteClusterB = cidrB
+
+	patch := client.MergeFrom(connection)
+	if err := r.Status().Patch(ctx, update, patch); err != nil {
+		return fmt.Errorf("errore aggiornando lo stato con le CIDR: %w", err)
+	}
+
+	return nil
+}
+
+func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfo(ctx context.Context, remoteClusterName string) (networkingv1alpha1.ClusterNetworkingStatus, error) {
+	var result networkingv1alpha1.ClusterNetworkingStatus
+	tenantNs := fmt.Sprintf("liqo-tenant-%s", remoteClusterName)
+
+	// Recupera i CR Network etichettati come "pod"
+	var networkList ipamv1alpha1.NetworkList
+	if err := r.List(ctx, &networkList, client.InNamespace(tenantNs), client.MatchingLabels{
+		"configuration.liqo.io/cidr-type": "pod",
+	}); err != nil {
+		return result, fmt.Errorf("errore nel recupero dei Network CR nel namespace %q: %w", tenantNs, err)
+	}
+
+	if len(networkList.Items) == 0 {
+		return result, fmt.Errorf("nessun Network CR con label pod trovato nel namespace %q", tenantNs)
+	}
+
+	// Prende il primo CR valido
+	netCfg := networkList.Items[0]
+	result.PodCIDR = netCfg.Spec.Cidr
+	result.RemappedPodCIDR = netCfg.Status.Cidr
+
+	return result, nil
+}
 // getKubeconfigFromLiqo recupera il kubeconfig dal Secret associato al virtual node,
 // ne modifica il namespace nel contesto corrente e lo salva in un file temporaneo.
 func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.Context, ForeignCluster string) (string, error) {
