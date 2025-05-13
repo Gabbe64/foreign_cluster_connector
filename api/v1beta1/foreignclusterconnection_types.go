@@ -20,32 +20,61 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // ForeignClusterConnectionSpec defines the desired state of ForeignClusterConnection.
 type ForeignClusterConnectionSpec struct {
-	ForeignClusterA string `json:"foreignClusterA"`
-	ForeignClusterB string `json:"foreignClusterB"`
+	ForeignClusterA string           `json:"foreignClusterA"`
+	ForeignClusterB string           `json:"foreignClusterB"`
+	Networking      NetworkingConfig `json:"networking,omitempty"`
+}
+
+// NetworkingConfig describes configuration flags for setting up the virtual connection.
+type NetworkingConfig struct {
+	MTU                   int32  `json:"mtu,omitempty"`
+	DisableSharingKeys    bool   `json:"disableSharingKeys,omitempty"`
+
+	ServerGatewayType     string `json:"serverGatewayType,omitempty"`
+	ServerTemplateName     string `json:"serverTemplateName,omitempty"`
+	ServerTemplateNamespace string `json:"serverTemplateNamespace,omitempty"`
+	ServerServiceType      string `json:"serverServiceType,omitempty"`
+	ServerServicePort      int32  `json:"serverServicePort,omitempty"`
+
+	ClientGatewayType      string `json:"clientGatewayType,omitempty"`
+	ClientTemplateName     string `json:"clientTemplateName,omitempty"`
+	ClientTemplateNamespace string `json:"clientTemplateNamespace,omitempty"`
+
+	TimeoutSeconds         int32  `json:"timeoutSeconds,omitempty"`
+	Wait                   bool   `json:"wait,omitempty"`
 }
 
 // ForeignClusterConnectionStatus defines the observed state of ForeignClusterConnection.
 type ForeignClusterConnectionStatus struct {
-	// IsConnected indica se i nodi sono connessi.
-	IsConnected bool `json:"isConnected"`
-	// LastUpdated rappresenta il timestamp dell'ultimo aggiornamento dello stato.
-	LastUpdated string `json:"lastUpdated,omitempty"`
-	// Phase rappresenta la fase corrente del processo di connessione.
-	Phase string `json:"phase,omitempty"`
-	// ErrorMessage contiene eventuali messaggi di errore.
+	IsConnected  bool   `json:"isConnected"`
+	LastUpdated  string `json:"lastUpdated,omitempty"`
+	Phase        string `json:"phase,omitempty"`
 	ErrorMessage string `json:"errorMessage,omitempty"`
+
+	RemoteClusterA ClusterNetworkingStatus `json:"remoteClusterA,omitempty"`
+	RemoteClusterB ClusterNetworkingStatus `json:"remoteClusterB,omitempty"`
+}
+
+// ClusterNetworkingStatus describes resolved values for CIDR handling between clusters.
+type ClusterNetworkingStatus struct {
+	PodCIDR           string `json:"podCIDR,omitempty"`
+	ExternalCIDR      string `json:"externalCIDR,omitempty"`
+	RemappedPodCIDR   string `json:"remappedPodCIDR,omitempty"`
+	RemappedExtCIDR   string `json:"remappedExternalCIDR,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:categories=liqo,shortName=fcc;fcconnection
-// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+// +kubebuilder:resource:scope=Cluster,singular=foreignclusterconnection,categories=liqo,shortName=fcc;fcconnection
+// +kubebuilder:printcolumn:name="ClusterA",type=string,JSONPath=`.spec.foreignClusterA`
+// +kubebuilder:printcolumn:name="ClusterB",type=string,JSONPath=`.spec.foreignClusterB`
 // +kubebuilder:printcolumn:name="Connected",type=boolean,JSONPath=`.status.isConnected`
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+// +kubebuilder:printcolumn:name="A-CIDR",type=string,JSONPath=`.status.remoteClusterA.podCIDR`
+// +kubebuilder:printcolumn:name="B-CIDR",type=string,JSONPath=`.status.remoteClusterB.podCIDR`
+
 // ForeignClusterConnection is the Schema for the foreignclusterconnections API.
 type ForeignClusterConnection struct {
 	metav1.TypeMeta   `json:",inline"`

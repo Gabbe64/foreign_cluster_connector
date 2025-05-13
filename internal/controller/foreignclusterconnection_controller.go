@@ -140,60 +140,68 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 
 // executeLiqoctlConnect esegue il comando "liqoctl network connect" utilizzando i kubeconfig recuperati
 func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) (string, error) {
-	// Recupera il kubeconfig per ForeignClusterA
+	// Recupera i kubeconfig per entrambi i cluster
 	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
 	if err != nil {
 		return "", fmt.Errorf("errore nel recupero del kubeconfig per ForeignClusterA: %v", err)
 	}
 	defer os.Remove(kubeconfigA)
 
-	// Recupera il kubeconfig per ForeignClusterB
 	kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterB)
 	if err != nil {
 		return "", fmt.Errorf("errore nel recupero del kubeconfig per ForeignClusterB: %v", err)
 	}
 	defer os.Remove(kubeconfigB)
 
-	// Crea un contesto con timeout
-	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	// Timeout da CR o default a 120s
+	timeout := 120 * time.Second
+	if connection.Spec.Networking.TimeoutSeconds > 0 {
+		timeout = time.Duration(connection.Spec.Networking.TimeoutSeconds) * time.Second
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	// Imposta la variabile d'ambiente KUBECONFIG e crea la factory per il cluster locale
+	// Crea local factory (usando kubeconfigA)
 	os.Setenv("KUBECONFIG", kubeconfigA)
 	localFactory := factory.NewForLocal()
 	if err := localFactory.Initialize(); err != nil {
-		return "", fmt.Errorf("errore nell'inizializzazione della localFactory: %v", err)
+		return "", fmt.Errorf("errore inizializzazione localFactory: %v", err)
 	}
 
-	// Imposta la variabile d'ambiente KUBECONFIG e crea la factory per il cluster remoto
+	// Crea remote factory (usando kubeconfigB)
 	os.Setenv("KUBECONFIG", kubeconfigB)
 	remoteFactory := factory.NewForRemote()
 	if err := remoteFactory.Initialize(); err != nil {
-		return "", fmt.Errorf("errore nell'inizializzazione della remoteFactory: %v", err)
+		return "", fmt.Errorf("errore inizializzazione remoteFactory: %v", err)
 	}
 
+	// Reimposta il kubeconfig corrente su A
 	os.Setenv("KUBECONFIG", kubeconfigA)
 	localFactory.Namespace = ""
 	remoteFactory.Namespace = ""
-	// Crea le opzioni per il comando "network connect"
+
+	// Prepara le opzioni da connection.Spec.Networking
+	netCfg := connection.Spec.Networking
 	opts := network.NewOptions(localFactory)
 	opts.RemoteFactory = remoteFactory
-	opts.ServerGatewayType = forge.DefaultGwServerType
-	opts.ServerTemplateName = forge.DefaultGwServerTemplateName // Nome del template
-	opts.ServerServiceType.Set("NodePort")
-	opts.ServerTemplateNamespace = "liqo"
-	opts.ServerServicePort = forge.DefaultGwServerPort
-	// Imposta i parametri per il Gateway Client, se necessario:
-	opts.ClientGatewayType = forge.DefaultGwClientType
-	opts.ClientTemplateName = forge.DefaultGwClientTemplateName
-	opts.ClientTemplateNamespace = "liqo"
-	// Parametri comuni
-	opts.MTU = forge.DefaultMTU
-	opts.DisableSharingKeys = false
-	// Timeout, wait, skip-validation e altri parametri possono essere impostati anch'essi:
-	opts.Timeout = 120 * time.Second
-	opts.Wait = true
 
+	opts.ServerGatewayType = netCfg.ServerGatewayType
+	opts.ServerTemplateName = netCfg.ServerTemplateName
+	opts.ServerTemplateNamespace = netCfg.ServerTemplateNamespace
+	opts.ServerServiceType.Set(netCfg.ServerServiceType)
+	opts.ServerServicePort = netCfg.ServerServicePort
+
+	opts.ClientGatewayType = netCfg.ClientGatewayType
+	opts.ClientTemplateName = netCfg.ClientTemplateName
+	opts.ClientTemplateNamespace = netCfg.ClientTemplateNamespace
+
+	opts.MTU = netCfg.MTU
+	opts.DisableSharingKeys = netCfg.DisableSharingKeys
+	opts.Timeout = timeout
+	opts.Wait = netCfg.Wait
+
+	// Logging per debug
 	localFactory.Printer = output.NewLocalPrinter(true, true)
 	remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
@@ -207,10 +215,9 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 
 	fmt.Println("Esecuzione del comando 'network connect'...")
 	if err := opts.RunConnect(ctx); err != nil {
-		return "", fmt.Errorf("errore durante l'esecuzione di 'network connect': %v", err)
+		return "", fmt.Errorf("errore durante 'network connect': %v", err)
 	}
 
-	fmt.Println("Operazione 'network connect' completata con successo.")
 	return "Operazione 'network connect' completata con successo.", nil
 }
 
