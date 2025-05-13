@@ -100,19 +100,6 @@ spec:
                     type: integer
                   wait:
                     type: boolean
-                required:
-                - clientGatewayType
-                - clientTemplateName
-                - clientTemplateNamespace
-                - disableSharingKeys
-                - mtu
-                - serverGatewayType
-                - serverServicePort
-                - serverServiceType
-                - serverTemplateName
-                - serverTemplateNamespace
-                - timeoutSeconds
-                - wait
                 type: object
             required:
             - foreignClusterA
