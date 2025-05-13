@@ -29,7 +29,7 @@ type ForeignClusterConnectionSpec struct {
 
 // NetworkingConfig describes configuration flags for setting up the virtual connection.
 type NetworkingConfig struct {
-	MTU                int32 `json:"mtu,omitempty"`
+	MTU                     int32  `json:"mtu,omitempty"`
 	ServerGatewayType       string `json:"serverGatewayType,omitempty"`
 	ServerTemplateName      string `json:"serverTemplateName,omitempty"`
 	ServerTemplateNamespace string `json:"serverTemplateNamespace,omitempty"`
@@ -38,8 +38,8 @@ type NetworkingConfig struct {
 	ClientGatewayType       string `json:"clientGatewayType,omitempty"`
 	ClientTemplateName      string `json:"clientTemplateName,omitempty"`
 	ClientTemplateNamespace string `json:"clientTemplateNamespace,omitempty"`
-	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty"`
-	Wait           bool  `json:"wait,omitempty"`
+	TimeoutSeconds          int32  `json:"timeoutSeconds,omitempty"`
+	Wait                    bool   `json:"wait,omitempty"`
 }
 
 // ForeignClusterConnectionStatus defines the observed state of ForeignClusterConnection.
