@@ -17,7 +17,7 @@ spec:
     - fcc
     - fcconnection
     singular: foreignclusterconnection
-  scope: Cluster
+  scope: Namespaced
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.foreignClusterA
