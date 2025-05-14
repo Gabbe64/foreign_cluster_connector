@@ -259,7 +259,7 @@ func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfo(ctx context.Contex
 	// Recupera i CR Network etichettati come "pod"
 	var netCfg ipamv1alpha1.Network
 	if err := r.Get(ctx, client.ObjectKey{
-		Namespace: tenantsNs,
+		Namespace: tenantNs,
 		Name:      name,
 	}, &netCfg); err != nil {
 		return result, fmt.Errorf("errore nel recupero dei Network CR nel namespace %q: %w", tenantNs, err)
