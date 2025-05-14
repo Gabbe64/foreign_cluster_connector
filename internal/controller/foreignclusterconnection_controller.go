@@ -216,26 +216,32 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 		return "", fmt.Errorf("errore durante 'network connect': %v", err)
 	}
 
-	if err := r.populateCIDRsFromNetworkConfig(ctx, connection); err != nil {
-		return "", fmt.Errorf("Impossibile caricare le Cidr : %v", err)
+	if err := r.populateCIDRsFromNetworkConfig(ctx, connection, localFactory, remoteFactory); err != nil {
+		return "", fmt.Errorf("impossibile caricare le CIDR: %v", err)
 	}
 
 	return "Operazione 'network connect' completata con successo.", nil
 }
 
-func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) error {
+func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(
+	ctx context.Context,
+	connection *networkingv1alpha1.ForeignClusterConnection,
+	localFactory factory.Factory,
+	remoteFactory factory.Factory,
+) error {
+
 	update := connection.DeepCopy()
 
-	// Recupera CIDR del cluster B nel cluster A (tenant-B è in cluster-A)
-	cidrA, err := r.retrieveCIDRInfo(ctx, connection.Spec.ForeignClusterB)
+	// B è remoto per A → recupera con localFactory
+	cidrA, err := r.retrieveCIDRInfoFromFactory(ctx, localFactory, connection.Spec.ForeignClusterB)
 	if err != nil {
-		return fmt.Errorf("errore nel recupero CIDR da cluster A (tenant-B): %w", err)
+		return fmt.Errorf("errore recuperando CIDR da cluster A (tenant-B): %w", err)
 	}
 
-	// Recupera CIDR del cluster A nel cluster B (tenant-A è in cluster-B)
-	cidrB, err := r.retrieveCIDRInfo(ctx, connection.Spec.ForeignClusterA)
+	// A è remoto per B → recupera con remoteFactory
+	cidrB, err := r.retrieveCIDRInfoFromFactory(ctx, remoteFactory, connection.Spec.ForeignClusterA)
 	if err != nil {
-		return fmt.Errorf("errore nel recupero CIDR da cluster B (tenant-A): %w", err)
+		return fmt.Errorf("errore recuperando CIDR da cluster B (tenant-A): %w", err)
 	}
 
 	update.Status.RemoteClusterA = cidrA
@@ -249,30 +255,34 @@ func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(ctx 
 	return nil
 }
 
-func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfo(ctx context.Context, remoteClusterName string) (networkingv1alpha1.ClusterNetworkingStatus, error) {
+
+func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfoFromFactory(
+	ctx context.Context,
+	factory factory.Factory,
+	remoteClusterName string,
+) (networkingv1alpha1.ClusterNetworkingStatus, error) {
+
 	var result networkingv1alpha1.ClusterNetworkingStatus
 	tenantNs := fmt.Sprintf("liqo-tenant-%s", remoteClusterName)
 	name := fmt.Sprintf("%s-pod", remoteClusterName)
 
-	// Recupera i CR Network etichettati come "pod"
-	var netCfg ipamv1alpha1.Network
-	if err := r.Get(ctx, client.ObjectKey{
-		Namespace: tenantNs,
-		Name:      name,
-	}, &netCfg); err != nil {
-		return result, fmt.Errorf("errore nel recupero dei Network CR nel namespace %q: %w", tenantNs, err)
+	// Usa il RESTConfig della factory per creare un nuovo client
+	c, err := client.New(factory.RESTConfig, client.Options{Scheme: r.Scheme})
+	if err != nil {
+		return result, fmt.Errorf("errore creando il client da factory: %w", err)
 	}
 
-	fmt.Printf("PodCIDR: %s\n", string(netCfg.Spec.CIDR))
-	fmt.Printf("PodCIDR: %s\n", string(netCfg.Status.CIDR))
+	// Recupera il CR Network specifico
+	var netCfg ipamv1alpha1.Network
+	if err := c.Get(ctx, client.ObjectKey{Namespace: tenantNs, Name: name}, &netCfg); err != nil {
+		return result, fmt.Errorf("errore nel recupero del CR Network nel namespace %q: %w", tenantNs, err)
+	}
 
 	result.PodCIDR = string(netCfg.Spec.CIDR)
 	result.RemappedPodCIDR = string(netCfg.Status.CIDR)
-
-
-
 	return result, nil
 }
+
 
 // getKubeconfigFromLiqo recupera il kubeconfig dal Secret associato al virtual node,
 // ne modifica il namespace nel contesto corrente e lo salva in un file temporaneo.
