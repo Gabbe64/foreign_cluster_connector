@@ -60,6 +60,14 @@ func init() {
 	utilruntime.Must(authv1beta1.AddToScheme(scheme))
 	utilruntime.Must(ipamv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
+	utilruntime.Must(networkingv1beta1.AddToScheme(clientgoscheme.Scheme))
+	// +kubebuilder:scaffold:scheme
+	utilruntime.Must(liqov1beta1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(offloadingv1beta1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(networkingv1beta1_1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(authv1beta1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(ipamv1alpha1.AddToScheme(clientgoscheme.Scheme))
+	// +kubebuilder:scaffold:scheme
 }
 
 // nolint:gocyclo
@@ -96,6 +104,11 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	fmt.Println("📦 Tipi registrati nello Scheme:")
+    for gvk := range scheme.AllKnownTypes() {
+        fmt.Println("🔹 Registered type:", gvk)
+    }
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
