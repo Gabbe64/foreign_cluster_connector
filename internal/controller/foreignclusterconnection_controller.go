@@ -254,21 +254,16 @@ func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(ctx 
 func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfo(ctx context.Context, remoteClusterName string) (networkingv1alpha1.ClusterNetworkingStatus, error) {
 	var result networkingv1alpha1.ClusterNetworkingStatus
 	tenantNs := fmt.Sprintf("liqo-tenant-%s", remoteClusterName)
+	name := fmt.Sprintf("%s-pod", remoteClusterName)
 
 	// Recupera i CR Network etichettati come "pod"
-	var networkList ipamv1alpha1.NetworkList
-	if err := r.List(ctx, &networkList, client.InNamespace(tenantNs), client.MatchingLabels{
-		"configuration.liqo.io/cidr-type": "pod",
-	}); err != nil {
+	var netCfg ipamv1alpha1.Network
+	if err := r.Get(ctx, client.ObjectKey{
+		Namespace: "liqo-tenant-europe-cloud",
+		Name:      "europe-cloud-pod",
+	}, &netCfg); err != nil {
 		return result, fmt.Errorf("errore nel recupero dei Network CR nel namespace %q: %w", tenantNs, err)
 	}
-
-	if len(networkList.Items) == 0 {
-		return result, fmt.Errorf("nessun Network CR con label pod trovato nel namespace %q", tenantNs)
-	}
-
-	// Prende il primo CR valido
-	netCfg := networkList.Items[0]
 	result.PodCIDR = string(netCfg.Spec.CIDR)
 	result.RemappedPodCIDR = string(netCfg.Status.CIDR)
 
