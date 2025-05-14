@@ -55,11 +55,11 @@ func init() {
 	utilruntime.Must(networkingv1beta1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 
-	utilruntime.Must(liqov1beta1.AddToScheme(scheme))
-	utilruntime.Must(offloadingv1beta1.AddToScheme(scheme))
-	utilruntime.Must(networkingv1beta1_1.AddToScheme(scheme))
-	utilruntime.Must(ipamv1alpha1.AddToScheme(scheme))
-	utilruntime.Must(authv1beta1.AddToScheme(scheme))
+	utilruntime.Must(liqov1beta1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(offloadingv1beta1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(networkingv1beta1_1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(ipamv1alpha1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(authv1beta1.AddToScheme(clientgoscheme.Scheme))
 }
 
 // nolint:gocyclo
