@@ -47,16 +47,24 @@ type ForeignClusterConnectionReconciler struct {
 // +kubebuilder:rbac:groups=networking.liqo.io,resources=foreignclusterconnections/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
-// Reconcile handles the creation and deletion of ForeignClusterConnection
+// finalizerName is used to ensure cleanup logic runs before the resource
+// is deleted from the Kubernetes API.
+const finalizerName = "foreignclusterconnection.finalizers.networking.liqo.io"
+
+// Reconcile is the main loop for the controller. It reacts to create, update,
+// and delete events for ForeignClusterConnection resources.
 func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	logger.Info("Reconciling ForeignClusterConnection", "namespace", req.Namespace, "name", req.Name)
 
+	// Fetch the ForeignClusterConnection instance
 	var connection networkingv1alpha1.ForeignClusterConnection
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
+		// Ignore not-found errors (resource deleted)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// Handle deletion: if DeletionTimestamp is set, run teardown logic
 	if !connection.ObjectMeta.DeletionTimestamp.IsZero() {
 		logger.Info("ForeignClusterConnection is being deleted, starting disconnection", "name", req.Name)
 		if err := r.disconnectLiqoctl(ctx, &connection); err != nil {
@@ -64,6 +72,7 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 			return ctrl.Result{}, err
 		}
 
+		// Remove the finalizer to allow deletion to complete
 		controllerutil.RemoveFinalizer(&connection, finalizerName)
 		if err := r.Update(ctx, &connection); err != nil {
 			return ctrl.Result{}, err
@@ -72,6 +81,7 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 		return ctrl.Result{}, nil
 	}
 
+	// Add finalizer if not present
 	if !controllerutil.ContainsFinalizer(&connection, finalizerName) {
 		logger.Info("Adding finalizer", "name", req.Name)
 		controllerutil.AddFinalizer(&connection, finalizerName)
@@ -80,11 +90,13 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 		}
 	}
 
+	// Skip if already connected
 	if connection.Status.IsConnected {
 		logger.Info("Nodes already connected", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 		return ctrl.Result{}, nil
 	}
 
+	// Initialize status on first reconcile
 	if connection.Status.Phase == "" {
 		connection.Status = networkingv1alpha1.ForeignClusterConnectionStatus{
 			IsConnected:  false,
@@ -98,27 +110,34 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 		}
 	}
 
+	// Begin connection process
 	logger.Info("Starting connection", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 	if err := r.updateStatus(ctx, &connection, "Connecting", ""); err != nil {
 		return ctrl.Result{}, err
 	}
 
+	// Execute liqoctl to establish network
 	output, err := r.executeLiqoctlConnect(ctx, &connection)
 	if err != nil {
+		// Update status on failure
 		logger.Error(err, "Error during liqoctl connect execution", "output", output)
 		_ = r.updateStatus(ctx, &connection, "Failed", fmt.Sprintf("Error: %v, Output: %s", err, output))
 		return ctrl.Result{}, err
 	}
 
+	// Success: update status and requeue to verify health
 	logger.Info("Connection succeeded", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 	if err := r.updateStatus(ctx, &connection, "Connected", ""); err != nil {
 		return ctrl.Result{}, err
 	}
 
+	// Requeue after 30 seconds to check for connectivity issues
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
+// executeLiqoctlConnect runs the liqoctl network connect command between two clusters.
 func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) (string, error) {
+	// Load kubeconfigs for both clusters from Liqo-managed secrets
 	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
 	if err != nil {
 		return "", fmt.Errorf("error retrieving kubeconfig for ForeignClusterA: %v", err)
@@ -131,6 +150,7 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 	}
 	defer os.Remove(kubeconfigB)
 
+	// Determine timeout for the network connect operation
 	timeout := 120 * time.Second
 	if connection.Spec.Networking.TimeoutSeconds > 0 {
 		timeout = time.Duration(connection.Spec.Networking.TimeoutSeconds) * time.Second
@@ -139,6 +159,7 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	// Initialize factories for local and remote clusters
 	os.Setenv("KUBECONFIG", kubeconfigA)
 	localFactory := factory.NewForLocal()
 	if err := localFactory.Initialize(); err != nil {
@@ -151,10 +172,12 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 		return "", fmt.Errorf("remoteFactory initialization error: %v", err)
 	}
 
+	// Reset KUBECONFIG to primary for operation
 	os.Setenv("KUBECONFIG", kubeconfigA)
 	localFactory.Namespace = ""
 	remoteFactory.Namespace = ""
 
+	// Configure network options based on the custom resource spec
 	netCfg := connection.Spec.Networking
 	opts := network.NewOptions(localFactory)
 	opts.RemoteFactory = remoteFactory
@@ -174,14 +197,17 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 	opts.Timeout = timeout
 	opts.Wait = netCfg.Wait
 
+	// Set up output printers for logging
 	localFactory.Printer = output.NewLocalPrinter(true, true)
 	remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
 	fmt.Println("Executing 'network connect'...")
+	// Run the connection command
 	if err := opts.RunConnect(ctx); err != nil {
 		return "", fmt.Errorf("error during 'network connect': %v", err)
 	}
 
+	// After connecting, retrieve and patch CIDRs into status
 	if err := r.populateCIDRsFromNetworkConfig(ctx, connection, *localFactory, *remoteFactory); err != nil {
 		return "", fmt.Errorf("unable to load CIDRs: %v", err)
 	}
@@ -189,25 +215,30 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 	return "Operation 'network connect' completed successfully.", nil
 }
 
+// populateCIDRsFromNetworkConfig fetches pod CIDR and remapped CIDR status
+// from both clusters and updates the CR status accordingly.
 func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(
 	ctx context.Context,
 	connection *networkingv1alpha1.ForeignClusterConnection,
 	localFactory factory.Factory,
 	remoteFactory factory.Factory,
 ) error {
-
+	// Create a deep copy to apply the status patch
 	update := connection.DeepCopy()
 
+	// Retrieve CIDR info from cluster A pointing to B
 	cidrA, err := r.retrieveCIDRInfoFromFactory(ctx, localFactory, connection.Spec.ForeignClusterB)
 	if err != nil {
 		return fmt.Errorf("error retrieving CIDR from cluster A: %w", err)
 	}
 
+	// Retrieve CIDR info from cluster B pointing to A
 	cidrB, err := r.retrieveCIDRInfoFromFactory(ctx, remoteFactory, connection.Spec.ForeignClusterA)
 	if err != nil {
 		return fmt.Errorf("error retrieving CIDR from cluster B: %w", err)
 	}
 
+	// Patch the updated status fields
 	update.Status.ForeignClusterANetworking = cidrA
 	update.Status.ForeignClusterBNetworking = cidrB
 
@@ -219,31 +250,38 @@ func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(
 	return nil
 }
 
+// retrieveCIDRInfoFromFactory reads the Network CR for a given tenant namespace
+// and extracts the Pod and remapped Pod CIDRs.
 func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfoFromFactory(
 	ctx context.Context,
 	factory factory.Factory,
 	remoteClusterName string,
 ) (networkingv1alpha1.ClusterNetworkingStatus, error) {
-
 	var result networkingv1alpha1.ClusterNetworkingStatus
+	// Construct tenant namespace and resource name
 	tenantNs := fmt.Sprintf("liqo-tenant-%s", remoteClusterName)
 	name := fmt.Sprintf("%s-pod", remoteClusterName)
 
+	// Create a Kubernetes client using the provided factory's REST config
 	c, err := client.New(factory.RESTConfig, client.Options{Scheme: r.Scheme})
 	if err != nil {
 		return result, fmt.Errorf("error creating client from factory: %w", err)
 	}
 
+	// Fetch the Network custom resource
 	var netCfg ipamv1alpha1.Network
 	if err := c.Get(ctx, client.ObjectKey{Namespace: tenantNs, Name: name}, &netCfg); err != nil {
 		return result, fmt.Errorf("error retrieving Network CR in namespace %q: %w", tenantNs, err)
 	}
 
+	// Populate the status fields
 	result.PodCIDR = string(netCfg.Spec.CIDR)
 	result.RemappedPodCIDR = string(netCfg.Status.CIDR)
 	return result, nil
 }
 
+// getKubeconfigFromLiqo retrieves the kubeconfig Secret for the given cluster
+// from the Liqo tenant namespace and writes it to a temporary file.
 func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.Context, ForeignCluster string) (string, error) {
 	namespace := fmt.Sprintf("liqo-tenant-%s", ForeignCluster)
 	secretName := fmt.Sprintf("kubeconfig-controlplane-%s", ForeignCluster)
@@ -253,6 +291,7 @@ func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.C
 		return "", fmt.Errorf("Error retrieving Secret %s in namespace %s: %v", secretName, namespace, err)
 	}
 
+	// Extract and parse the kubeconfig data
 	kubeconfigData, exists := secret.Data["kubeconfig"]
 	if !exists {
 		return "", fmt.Errorf("Secret %s does not contain 'kubeconfig' key", secretName)
@@ -263,12 +302,13 @@ func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.C
 		return "", fmt.Errorf("Error parsing kubeconfig: %v", err)
 	}
 
+	// Ensure no namespace is set in the context so we can operate cluster-wide
 	if config.CurrentContext == "" {
 		return "", fmt.Errorf("Kubeconfig has no current context set")
 	}
-
 	config.Contexts[config.CurrentContext].Namespace = ""
 
+	// Write the modified kubeconfig to a temp file
 	modifiedData, err := clientcmd.Write(*config)
 	if err != nil {
 		return "", fmt.Errorf("Error marshaling modified kubeconfig: %v", err)
@@ -282,6 +322,7 @@ func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.C
 	return kubeconfigPath, nil
 }
 
+// updateStatus patches the phase, timestamp, and error message into the CR status.
 func (r *ForeignClusterConnectionReconciler) updateStatus(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection, phase, errorMsg string) error {
 	patch := client.MergeFrom(connection.DeepCopy())
 
@@ -297,10 +338,12 @@ func (r *ForeignClusterConnectionReconciler) updateStatus(ctx context.Context, c
 	return nil
 }
 
+// disconnectLiqoctl tears down the Liqo network connection using liqoctl network reset.
 func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) error {
 	logger := log.FromContext(ctx)
 	logger.Info("Starting disconnection", "name", connection.Name)
 
+	// Retrieve kubeconfigs for both sides as above
 	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
 	if err != nil {
 		return err
@@ -313,9 +356,11 @@ func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Conte
 	}
 	defer os.Remove(kubeconfigB)
 
+	// Use a shorter timeout for disconnect
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
+	// Initialize factories similar to connect
 	os.Setenv("KUBECONFIG", kubeconfigA)
 	localFactory := factory.NewForLocal()
 	if err := localFactory.Initialize(); err != nil {
@@ -328,6 +373,7 @@ func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Conte
 		return fmt.Errorf("error initializing remoteFactory: %v", err)
 	}
 
+	// Set namespaces for tenant teardown
 	localFactory.Namespace = fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterB)
 	remoteFactory.Namespace = fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterA)
 
@@ -335,6 +381,7 @@ func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Conte
 	opts.RemoteFactory = remoteFactory
 	opts.Timeout = 120 * time.Second
 	opts.Wait = true
+	// Use printers for logs
 	localFactory.Printer = output.NewLocalPrinter(true, true)
 	remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
@@ -347,6 +394,7 @@ func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Conte
 	return nil
 }
 
+// SetupWithManager registers the controller with the manager and watches for CR changes.
 func (r *ForeignClusterConnectionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkingv1alpha1.ForeignClusterConnection{}).
