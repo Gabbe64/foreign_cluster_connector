@@ -256,7 +256,7 @@ func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfo(ctx context.Contex
 	tenantNs := fmt.Sprintf("liqo-tenant-%s", remoteClusterName)
 
 	// Recupera i CR Network etichettati come "pod"
-	var networkList ipamv1alpha1.Network
+	var networkList ipamv1alpha1.NetworkList
 	if err := r.List(ctx, &networkList, client.InNamespace(tenantNs), client.MatchingLabels{
 		"configuration.liqo.io/cidr-type": "pod",
 	}); err != nil {
