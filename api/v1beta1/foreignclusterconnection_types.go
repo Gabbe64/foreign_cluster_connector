@@ -49,8 +49,8 @@ type ForeignClusterConnectionStatus struct {
 	Phase        string `json:"phase,omitempty"`
 	ErrorMessage string `json:"errorMessage,omitempty"`
 
-	RemoteClusterA ClusterNetworkingStatus `json:"remoteClusterA,omitempty"`
-	RemoteClusterB ClusterNetworkingStatus `json:"remoteClusterB,omitempty"`
+	ForeignClusterANetworking ClusterNetworkingStatus `json:"foreignClusterANetworking,omitempty"`
+	ForeignClusterBNetworking ClusterNetworkingStatus `json:"foreignClusterBNetworking,omitempty"`
 }
 
 // ClusterNetworkingStatus describes resolved values for CIDR handling between clusters.

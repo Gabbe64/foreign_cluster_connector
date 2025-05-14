@@ -47,62 +47,44 @@ type ForeignClusterConnectionReconciler struct {
 // +kubebuilder:rbac:groups=networking.liqo.io,resources=foreignclusterconnections/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the ForeignClusterConnection object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.2/pkg/reconcile
-
-const finalizerName = "foreignclusterconnection.finalizers.networking.liqo.io"
-
-// Reconcile gestisce la creazione e la cancellazione delle ForeignClusterConnection
+// Reconcile handles the creation and deletion of ForeignClusterConnection
 func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	logger.Info("Reconciling ForeignClusterConnection", "namespace", req.Namespace, "name", req.Name)
 
 	var connection networkingv1alpha1.ForeignClusterConnection
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
-		// Se la risorsa non viene trovata, non è necessario riconciliarla ulteriormente.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// Se l'oggetto è in fase di eliminazione, esegui la disconnessione
 	if !connection.ObjectMeta.DeletionTimestamp.IsZero() {
-		logger.Info("ForeignClusterConnection è in fase di eliminazione, avvio disconnessione", "name", req.Name)
+		logger.Info("ForeignClusterConnection is being deleted, starting disconnection", "name", req.Name)
 		if err := r.disconnectLiqoctl(ctx, &connection); err != nil {
-			logger.Error(err, "Errore durante la disconnessione")
+			logger.Error(err, "Error during disconnection")
 			return ctrl.Result{}, err
 		}
 
-		// Rimuove il finalizer per permettere l'eliminazione dell'oggetto
 		controllerutil.RemoveFinalizer(&connection, finalizerName)
 		if err := r.Update(ctx, &connection); err != nil {
 			return ctrl.Result{}, err
 		}
-		logger.Info("Finalizer rimosso, ForeignClusterConnection può essere eliminata", "name", req.Name)
+		logger.Info("Finalizer removed, ForeignClusterConnection can be deleted", "name", req.Name)
 		return ctrl.Result{}, nil
 	}
 
-	// Aggiunge il finalizer se non è già presente
 	if !controllerutil.ContainsFinalizer(&connection, finalizerName) {
-		logger.Info("Aggiungo il finalizer", "name", req.Name)
+		logger.Info("Adding finalizer", "name", req.Name)
 		controllerutil.AddFinalizer(&connection, finalizerName)
 		if err := r.Update(ctx, &connection); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
 
-	// Se i nodi sono già connessi, non eseguire ulteriori azioni
 	if connection.Status.IsConnected {
-		logger.Info("Nodi già connessi", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
+		logger.Info("Nodes already connected", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 		return ctrl.Result{}, nil
 	}
 
-	// Inizializza lo stato se non è stato impostato
 	if connection.Status.Phase == "" {
 		connection.Status = networkingv1alpha1.ForeignClusterConnectionStatus{
 			IsConnected:  false,
@@ -111,25 +93,24 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 			ErrorMessage: "",
 		}
 		if err := r.Status().Update(ctx, &connection); err != nil {
-			logger.Error(err, "Errore nell'inizializzazione dello stato")
+			logger.Error(err, "Error initializing status")
 			return ctrl.Result{}, err
 		}
 	}
 
-	logger.Info("Avvio connessione", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
+	logger.Info("Starting connection", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 	if err := r.updateStatus(ctx, &connection, "Connecting", ""); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	// Esegue il comando liqoctl connect
 	output, err := r.executeLiqoctlConnect(ctx, &connection)
 	if err != nil {
-		logger.Error(err, "Errore durante l'esecuzione di liqoctl connect", "output", output)
-		_ = r.updateStatus(ctx, &connection, "Failed", fmt.Sprintf("Errore: %v, Output: %s", err, output))
+		logger.Error(err, "Error during liqoctl connect execution", "output", output)
+		_ = r.updateStatus(ctx, &connection, "Failed", fmt.Sprintf("Error: %v, Output: %s", err, output))
 		return ctrl.Result{}, err
 	}
 
-	logger.Info("Connessione riuscita", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
+	logger.Info("Connection succeeded", "nodeA", connection.Spec.ForeignClusterA, "nodeB", connection.Spec.ForeignClusterB)
 	if err := r.updateStatus(ctx, &connection, "Connected", ""); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -137,22 +118,19 @@ func (r *ForeignClusterConnectionReconciler) Reconcile(ctx context.Context, req 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
-// executeLiqoctlConnect esegue il comando "liqoctl network connect" utilizzando i kubeconfig recuperati
 func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) (string, error) {
-	// Recupera i kubeconfig per entrambi i cluster
 	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
 	if err != nil {
-		return "", fmt.Errorf("errore nel recupero del kubeconfig per ForeignClusterA: %v", err)
+		return "", fmt.Errorf("error retrieving kubeconfig for ForeignClusterA: %v", err)
 	}
 	defer os.Remove(kubeconfigA)
 
 	kubeconfigB, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterB)
 	if err != nil {
-		return "", fmt.Errorf("errore nel recupero del kubeconfig per ForeignClusterB: %v", err)
+		return "", fmt.Errorf("error retrieving kubeconfig for ForeignClusterB: %v", err)
 	}
 	defer os.Remove(kubeconfigB)
 
-	// Timeout da CR o default a 120s
 	timeout := 120 * time.Second
 	if connection.Spec.Networking.TimeoutSeconds > 0 {
 		timeout = time.Duration(connection.Spec.Networking.TimeoutSeconds) * time.Second
@@ -161,26 +139,22 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	// Crea local factory (usando kubeconfigA)
 	os.Setenv("KUBECONFIG", kubeconfigA)
 	localFactory := factory.NewForLocal()
 	if err := localFactory.Initialize(); err != nil {
-		return "", fmt.Errorf("errore inizializzazione localFactory: %v", err)
+		return "", fmt.Errorf("localFactory initialization error: %v", err)
 	}
 
-	// Crea remote factory (usando kubeconfigB)
 	os.Setenv("KUBECONFIG", kubeconfigB)
 	remoteFactory := factory.NewForRemote()
 	if err := remoteFactory.Initialize(); err != nil {
-		return "", fmt.Errorf("errore inizializzazione remoteFactory: %v", err)
+		return "", fmt.Errorf("remoteFactory initialization error: %v", err)
 	}
 
-	// Reimposta il kubeconfig corrente su A
 	os.Setenv("KUBECONFIG", kubeconfigA)
 	localFactory.Namespace = ""
 	remoteFactory.Namespace = ""
 
-	// Prepara le opzioni da connection.Spec.Networking
 	netCfg := connection.Spec.Networking
 	opts := network.NewOptions(localFactory)
 	opts.RemoteFactory = remoteFactory
@@ -200,27 +174,19 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 	opts.Timeout = timeout
 	opts.Wait = netCfg.Wait
 
-	// Logging per debug
 	localFactory.Printer = output.NewLocalPrinter(true, true)
 	remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
-	fmt.Println("Informazioni localFactory:")
-	fmt.Printf("Namespace: %s\n", localFactory.Namespace)
-
-
-
-	
-
-	fmt.Println("Esecuzione del comando 'network connect'...")
+	fmt.Println("Executing 'network connect'...")
 	if err := opts.RunConnect(ctx); err != nil {
-		return "", fmt.Errorf("errore durante 'network connect': %v", err)
+		return "", fmt.Errorf("error during 'network connect': %v", err)
 	}
 
 	if err := r.populateCIDRsFromNetworkConfig(ctx, connection, *localFactory, *remoteFactory); err != nil {
-		return "", fmt.Errorf("impossibile caricare le CIDR: %v", err)
+		return "", fmt.Errorf("unable to load CIDRs: %v", err)
 	}
 
-	return "Operazione 'network connect' completata con successo.", nil
+	return "Operation 'network connect' completed successfully.", nil
 }
 
 func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(
@@ -232,29 +198,26 @@ func (r *ForeignClusterConnectionReconciler) populateCIDRsFromNetworkConfig(
 
 	update := connection.DeepCopy()
 
-	// B è remoto per A → recupera con localFactory
 	cidrA, err := r.retrieveCIDRInfoFromFactory(ctx, localFactory, connection.Spec.ForeignClusterB)
 	if err != nil {
-		return fmt.Errorf("errore recuperando CIDR da cluster A (tenant-B): %w", err)
+		return fmt.Errorf("error retrieving CIDR from cluster A: %w", err)
 	}
 
-	// A è remoto per B → recupera con remoteFactory
 	cidrB, err := r.retrieveCIDRInfoFromFactory(ctx, remoteFactory, connection.Spec.ForeignClusterA)
 	if err != nil {
-		return fmt.Errorf("errore recuperando CIDR da cluster B (tenant-A): %w", err)
+		return fmt.Errorf("error retrieving CIDR from cluster B: %w", err)
 	}
 
-	update.Status.RemoteClusterA = cidrA
-	update.Status.RemoteClusterB = cidrB
+	update.Status.ForeignClusterANetworking = cidrA
+	update.Status.ForeignClusterBNetworking = cidrB
 
 	patch := client.MergeFrom(connection)
 	if err := r.Status().Patch(ctx, update, patch); err != nil {
-		return fmt.Errorf("errore aggiornando lo stato con le CIDR: %w", err)
+		return fmt.Errorf("error updating status with CIDRs: %w", err)
 	}
 
 	return nil
 }
-
 
 func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfoFromFactory(
 	ctx context.Context,
@@ -266,16 +229,14 @@ func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfoFromFactory(
 	tenantNs := fmt.Sprintf("liqo-tenant-%s", remoteClusterName)
 	name := fmt.Sprintf("%s-pod", remoteClusterName)
 
-	// Usa il RESTConfig della factory per creare un nuovo client
 	c, err := client.New(factory.RESTConfig, client.Options{Scheme: r.Scheme})
 	if err != nil {
-		return result, fmt.Errorf("errore creando il client da factory: %w", err)
+		return result, fmt.Errorf("error creating client from factory: %w", err)
 	}
 
-	// Recupera il CR Network specifico
 	var netCfg ipamv1alpha1.Network
 	if err := c.Get(ctx, client.ObjectKey{Namespace: tenantNs, Name: name}, &netCfg); err != nil {
-		return result, fmt.Errorf("errore nel recupero del CR Network nel namespace %q: %w", tenantNs, err)
+		return result, fmt.Errorf("error retrieving Network CR in namespace %q: %w", tenantNs, err)
 	}
 
 	result.PodCIDR = string(netCfg.Spec.CIDR)
@@ -283,54 +244,44 @@ func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfoFromFactory(
 	return result, nil
 }
 
-
-// getKubeconfigFromLiqo recupera il kubeconfig dal Secret associato al virtual node,
-// ne modifica il namespace nel contesto corrente e lo salva in un file temporaneo.
 func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.Context, ForeignCluster string) (string, error) {
-	// Costruisce namespace e nome del secret in base al virtual node.
 	namespace := fmt.Sprintf("liqo-tenant-%s", ForeignCluster)
 	secretName := fmt.Sprintf("kubeconfig-controlplane-%s", ForeignCluster)
 
 	var secret corev1.Secret
 	if err := r.Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretName}, &secret); err != nil {
-		return "", fmt.Errorf("Errore nel recupero del Secret %s nel namespace %s: %v", secretName, namespace, err)
+		return "", fmt.Errorf("Error retrieving Secret %s in namespace %s: %v", secretName, namespace, err)
 	}
 
 	kubeconfigData, exists := secret.Data["kubeconfig"]
 	if !exists {
-		return "", fmt.Errorf("Il Secret %s non contiene la chiave 'kubeconfig'", secretName)
+		return "", fmt.Errorf("Secret %s does not contain 'kubeconfig' key", secretName)
 	}
 
-	// Carica il kubeconfig YAML in memoria come oggetto Config.
 	config, err := clientcmd.Load(kubeconfigData)
 	if err != nil {
-		return "", fmt.Errorf("Errore nel parsing del kubeconfig: %v", err)
+		return "", fmt.Errorf("Error parsing kubeconfig: %v", err)
 	}
 
-	// Verifica che sia impostato un contesto corrente.
 	if config.CurrentContext == "" {
-		return "", fmt.Errorf("Il kubeconfig non ha un contesto corrente impostato")
+		return "", fmt.Errorf("Kubeconfig has no current context set")
 	}
 
-	// Modifica il namespace del contesto corrente con quello preso dal secret.
 	config.Contexts[config.CurrentContext].Namespace = ""
 
-	// Scrive l'oggetto Config modificato in YAML.
 	modifiedData, err := clientcmd.Write(*config)
 	if err != nil {
-		return "", fmt.Errorf("Errore nel marshalling del kubeconfig modificato: %v", err)
+		return "", fmt.Errorf("Error marshaling modified kubeconfig: %v", err)
 	}
 
-	// Salva il kubeconfig modificato in un file temporaneo.
 	kubeconfigPath := filepath.Join(os.TempDir(), fmt.Sprintf("kubeconfig-%s.yaml", ForeignCluster))
 	if err := os.WriteFile(kubeconfigPath, modifiedData, 0600); err != nil {
-		return "", fmt.Errorf("Errore nella scrittura del file kubeconfig: %v", err)
+		return "", fmt.Errorf("Error writing kubeconfig file: %v", err)
 	}
 
 	return kubeconfigPath, nil
 }
 
-// updateStatus aggiorna lo stato dell'oggetto ForeignClusterConnection utilizzando una patch per evitare conflitti
 func (r *ForeignClusterConnectionReconciler) updateStatus(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection, phase, errorMsg string) error {
 	patch := client.MergeFrom(connection.DeepCopy())
 
@@ -340,18 +291,16 @@ func (r *ForeignClusterConnectionReconciler) updateStatus(ctx context.Context, c
 	connection.Status.IsConnected = (phase == "Connected")
 
 	if err := r.Status().Patch(ctx, connection, patch); err != nil {
-		log.FromContext(ctx).Error(err, "Errore nell'aggiornamento dello stato")
+		log.FromContext(ctx).Error(err, "Error updating status")
 		return err
 	}
 	return nil
 }
 
-// disconnectLiqoctl esegue il comando "liqoctl network disconnect" per disconnettere i nodi
 func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Context, connection *networkingv1alpha1.ForeignClusterConnection) error {
 	logger := log.FromContext(ctx)
-	logger.Info("Avvio disconnessione", "name", connection.Name)
+	logger.Info("Starting disconnection", "name", connection.Name)
 
-	// Recupera i kubeconfig
 	kubeconfigA, err := r.getKubeconfigFromLiqo(ctx, connection.Spec.ForeignClusterA)
 	if err != nil {
 		return err
@@ -364,27 +313,24 @@ func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Conte
 	}
 	defer os.Remove(kubeconfigB)
 
-	// Timeout sul contesto
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	// Inizializza le factory
 	os.Setenv("KUBECONFIG", kubeconfigA)
 	localFactory := factory.NewForLocal()
 	if err := localFactory.Initialize(); err != nil {
-		return fmt.Errorf("errore nella inizializzazione della localFactory: %v", err)
+		return fmt.Errorf("error initializing localFactory: %v", err)
 	}
 
 	os.Setenv("KUBECONFIG", kubeconfigB)
 	remoteFactory := factory.NewForRemote()
 	if err := remoteFactory.Initialize(); err != nil {
-		return fmt.Errorf("errore nella inizializzazione della remoteFactory: %v", err)
+		return fmt.Errorf("error initializing remoteFactory: %v", err)
 	}
 
 	localFactory.Namespace = fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterB)
 	remoteFactory.Namespace = fmt.Sprintf("liqo-tenant-%s", connection.Spec.ForeignClusterA)
 
-	// Configura le opzioni
 	opts := network.NewOptions(localFactory)
 	opts.RemoteFactory = remoteFactory
 	opts.Timeout = 120 * time.Second
@@ -392,17 +338,15 @@ func (r *ForeignClusterConnectionReconciler) disconnectLiqoctl(ctx context.Conte
 	localFactory.Printer = output.NewLocalPrinter(true, true)
 	remoteFactory.Printer = output.NewRemotePrinter(true, true)
 
-	// Esegui il solo disconnect (toglie client/server ma lascia intatta la network-config)
-	fmt.Println("Esecuzione del comando 'network reset'...")
+	fmt.Println("Executing 'network reset'...")
 	if err := opts.RunReset(ctx); err != nil {
-		return fmt.Errorf("errore durante l'esecuzione di 'network reset': %v", err)
+		return fmt.Errorf("error during 'network reset': %v", err)
 	}
 
-	fmt.Println("Operazione 'network reset' completata con successo.")
+	fmt.Println("Operation 'network reset' completed successfully.")
 	return nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
 func (r *ForeignClusterConnectionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkingv1alpha1.ForeignClusterConnection{}).
