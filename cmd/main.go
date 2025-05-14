@@ -57,7 +57,7 @@ func init() {
 
 	utilruntime.Must(liqov1beta1.AddToScheme(scheme))
 	utilruntime.Must(offloadingv1beta1.AddToScheme(scheme))
-	utilruntime.Must(networkingv1beta1_1.AddToScheme(scheme))	
+	utilruntime.Must(networkingv1beta1_1.AddToScheme(scheme))
 	utilruntime.Must(authv1beta1.AddToScheme(scheme))
 	utilruntime.Must(ipamv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:schemes

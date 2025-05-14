@@ -217,10 +217,9 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 		return "", fmt.Errorf("errore durante 'network connect': %v", err)
 	}
 
-	if err:= r.populateCIDRsFromNetworkConfig(ctx,connection); err != nil {
+	if err := r.populateCIDRsFromNetworkConfig(ctx, connection); err != nil {
 		return "", fmt.Errorf("Impossibile caricare le Cidr : %v", err)
 	}
-
 
 	return "Operazione 'network connect' completata con successo.", nil
 }
@@ -269,6 +268,7 @@ func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfo(ctx context.Contex
 
 	return result, nil
 }
+
 // getKubeconfigFromLiqo recupera il kubeconfig dal Secret associato al virtual node,
 // ne modifica il namespace nel contesto corrente e lo salva in un file temporaneo.
 func (r *ForeignClusterConnectionReconciler) getKubeconfigFromLiqo(ctx context.Context, ForeignCluster string) (string, error) {
