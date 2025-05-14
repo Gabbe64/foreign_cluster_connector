@@ -206,11 +206,10 @@ func (r *ForeignClusterConnectionReconciler) executeLiqoctlConnect(ctx context.C
 
 	fmt.Println("Informazioni localFactory:")
 	fmt.Printf("Namespace: %s\n", localFactory.Namespace)
-	fmt.Printf("RESTConfig: %+v\n\n", localFactory.RESTConfig)
 
-	fmt.Println("Informazioni remoteFactory:")
-	fmt.Printf("Namespace: %s\n", remoteFactory.Namespace)
-	fmt.Printf("RESTConfig: %+v\n\n", remoteFactory.RESTConfig)
+
+
+	
 
 	fmt.Println("Esecuzione del comando 'network connect'...")
 	if err := opts.RunConnect(ctx); err != nil {
@@ -263,8 +262,14 @@ func (r *ForeignClusterConnectionReconciler) retrieveCIDRInfo(ctx context.Contex
 	}, &netCfg); err != nil {
 		return result, fmt.Errorf("errore nel recupero dei Network CR nel namespace %q: %w", tenantNs, err)
 	}
+
+	fmt.Printf("PodCIDR: %s\n", string(netCfg.Spec.CIDR))
+	fmt.Printf("PodCIDR: %s\n", string(netCfg.Status.CIDR))
+
 	result.PodCIDR = string(netCfg.Spec.CIDR)
 	result.RemappedPodCIDR = string(netCfg.Status.CIDR)
+
+
 
 	return result, nil
 }
