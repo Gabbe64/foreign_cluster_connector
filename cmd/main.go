@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"crypto/tls"
 	"flag"
 	authv1beta1 "github.com/liqotech/liqo/apis/authentication/v1beta1"
