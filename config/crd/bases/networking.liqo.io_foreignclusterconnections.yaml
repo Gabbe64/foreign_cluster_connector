@@ -109,30 +109,30 @@ spec:
             properties:
               errorMessage:
                 type: string
+              foreignClusterANetworking:
+                description: ClusterNetworkingStatus describes resolved values for
+                  CIDR handling between clusters.
+                properties:
+                  podCIDR:
+                    type: string
+                  remappedPodCIDR:
+                    type: string
+                type: object
+              foreignClusterBNetworking:
+                description: ClusterNetworkingStatus describes resolved values for
+                  CIDR handling between clusters.
+                properties:
+                  podCIDR:
+                    type: string
+                  remappedPodCIDR:
+                    type: string
+                type: object
               isConnected:
                 type: boolean
               lastUpdated:
                 type: string
               phase:
                 type: string
-              remoteClusterA:
-                description: ClusterNetworkingStatus describes resolved values for
-                  CIDR handling between clusters.
-                properties:
-                  podCIDR:
-                    type: string
-                  remappedPodCIDR:
-                    type: string
-                type: object
-              remoteClusterB:
-                description: ClusterNetworkingStatus describes resolved values for
-                  CIDR handling between clusters.
-                properties:
-                  podCIDR:
-                    type: string
-                  remappedPodCIDR:
-                    type: string
-                type: object
             required:
             - isConnected
             type: object
