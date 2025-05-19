@@ -66,8 +66,8 @@ type ClusterNetworkingStatus struct {
 // +kubebuilder:printcolumn:name="ClusterB",type=string,JSONPath=`.spec.foreignClusterB`
 // +kubebuilder:printcolumn:name="Connected",type=boolean,JSONPath=`.status.isConnected`
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
-// +kubebuilder:printcolumn:name="A-CIDR",type=string,JSONPath=`.status.remoteClusterA.podCIDR`
-// +kubebuilder:printcolumn:name="B-CIDR",type=string,JSONPath=`.status.remoteClusterB.podCIDR`
+// +kubebuilder:printcolumn:name="A-CIDR",type=string,JSONPath=`.status.foreignClusterANetworking.remappedPodCIDR`
+// +kubebuilder:printcolumn:name="B-CIDR",type=string,JSONPath=`.status.foreignClusterBNetworking.remappedPodCIDR`
 
 // ForeignClusterConnection is the Schema for the foreignclusterconnections API.
 type ForeignClusterConnection struct {

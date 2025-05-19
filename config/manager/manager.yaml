@@ -63,7 +63,7 @@ spec:
         args:
           - --leader-elect
           - --health-probe-bind-address=:8081
-        image: liqo-shortcutmanager:latest #image: <TUO_REGISTRY>/liqo-shortcutmanager:latest
+        image: ghcr.io/scal110/liqo-shortcutmanager:latest
         imagePullPolicy: IfNotPresent
         name: liqo-shortcutmanager
         ports: []
