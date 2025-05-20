@@ -32,10 +32,10 @@ spec:
     - jsonPath: .status.phase
       name: Phase
       type: string
-    - jsonPath: .status.remoteClusterA.podCIDR
+    - jsonPath: .status.foreignClusterANetworking.remappedPodCIDR
       name: A-CIDR
       type: string
-    - jsonPath: .status.remoteClusterB.podCIDR
+    - jsonPath: .status.foreignClusterBNetworking.remappedPodCIDR
       name: B-CIDR
       type: string
     name: v1beta1
