@@ -1,8 +1,0 @@
-apiVersion: networking.liqo.io/v1beta1
-kind: ForeignClusterConnection
-metadata:
-  name: test-connection
-spec:
-  foreignClusterA: "europe-rome-edge"
-  foreignClusterB: "europe-milan-edge"
-  

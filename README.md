@@ -1,6 +1,6 @@
 # Foreign Cluster Connector
 
-**Foreign Cluster Connector** is a Kubebuilder-based Liqo feature that runs in the **central Liqo cluster** and manages a direct network connection between two **leaf clusters**. 
+**Foreign Cluster Connector** is a Kubebuilder-based Liqo feature that runs in the **central Liqo cluster** and manages a direct network connection between two **foreign clusters**. 
 ---
 
 ## Description
@@ -46,7 +46,7 @@ Building on this, future enhancements could include:
 ## Getting Started
 
 > **Note:**  
-> This controller has been tested with the `replicated-deployment` example from [Liqo](https://github.com/liqotech/liqo). We recommend testing it in the same context to verify its functionality.
+> This controller has been tested with the `replicated-deployment` example from [Liqo](https://github.com/liqotech/liqo) using **Cilium** as the CNI, since `liqoctl disconnect/reset` commands had known issues with the default Kindnet. We recommend testing it in the same context to verify its functionality.
 
 ### Prerequisites
 
@@ -59,35 +59,25 @@ Building on this, future enhancements could include:
 
 ### Deploying to the Cluster
 
-#### 1. **Build and push the controller image**
 
-```sh
-make docker-build IMG=vnc-controller:latest
-```
 
-#### 2. **Load the image into the cluster**
-
-```sh
-kind load docker-image vnc-controller:latest
-```
-
-#### 3. **Install the CRDs into the cluster**
+#### 1. **Install the CRDs into the cluster**
 
 ```sh
 make install
 ```
 
-#### 4. **Apply permissions in the leaf clusters**
+#### 2. **Apply permissions in the leaf clusters**
 
 Apply the `clusterrole.yaml` file **in each leaf cluster** to grant the controller the necessary permissions to create the required components.
 
-> ⚠️ This is a temporary setup intended for testing purposes only.
+> ⚠️ This is a temporary setup intended for testing purposes only. A proper ServiceAccount with the necessary ClusterRole and ClusterRoleBinding should be configured for production use.
 
 ```sh
 kubectl apply -f clusterrole.yaml
 ```
 
-#### 5. **Deploy the controller manager in the central cluster**
+#### 3. **Deploy the controller manager in the central cluster**
 
 ```sh
 make deploy
@@ -100,13 +90,13 @@ make deploy
 #### ✅ Create a CR in the central cluster to establish the connection
 
 ```sh
-kubectl apply -f test-connection.yaml
+kubectl apply -f shortcutExample.yaml
 ```
 
 #### ❌ Delete the CR to remove the connection
 
 ```sh
-kubectl delete vnc test-connection
+kubectl delete fcc europe-rome-edge-europe-milan-edge
 ```
 
 ---

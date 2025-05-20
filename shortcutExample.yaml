@@ -1,0 +1,20 @@
+apiVersion: networking.liqo.io/v1beta1
+kind: ForeignClusterConnection
+metadata:
+  name: europe-rome-edge-europe-milan-edge
+  namespace: default
+spec:
+  foreignClusterA: europe-rome-edge
+  foreignClusterB: europe-milan-edge
+  networking:
+    mtu: 1450
+    timeoutSeconds: 120
+    wait: true
+    serverGatewayType: networking.liqo.io/v1beta1/wggatewayservertemplates
+    serverTemplateName: wireguard-server
+    serverTemplateNamespace: liqo
+    serverServiceType: NodePort
+    serverServicePort: 51840
+    clientGatewayType: networking.liqo.io/v1beta1/wggatewayclienttemplates
+    clientTemplateName: wireguard-client
+    clientTemplateNamespace: liqo
