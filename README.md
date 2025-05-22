@@ -76,7 +76,8 @@ Apply the `clusterrole.yaml` file **in each leaf cluster** to grant the controll
 >   --kubeconfig /path/to/foreign/kubeconfig
 > ```
 >
-> ⚠️ This is a temporary setup intended for testing purposes only. A proper ServiceAccount with the necessary ClusterRole and ClusterRoleBinding should be configured for production use.
+>⚠️ This is a temporary setup intended for testing purposes only. A proper ServiceAccount with the necessary ClusterRole and ClusterRoleBinding should be configured for production use.
+>
 >⚠️ If a non-default setup is used, ensure that the `subjects` field in the `ClusterRoleBinding` is updated to reference the correct ServiceAccount, User, or Group of the main cluster.
 
 
