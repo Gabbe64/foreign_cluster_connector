@@ -72,7 +72,7 @@ make install
 Apply the `clusterrole.yaml` file **in each leaf cluster** to grant the controller the necessary permissions to create the required components.
 
 > ⚠️ This is a temporary setup intended for testing purposes only. A proper ServiceAccount with the necessary ClusterRole and ClusterRoleBinding should be configured for production use.
-
+>⚠️ If a non-default setup is used, ensure that the `subjects` field in the `ClusterRoleBinding` is updated to reference the correct ServiceAccount, User, or Group of the main cluster.
 ```sh
 kubectl apply -f clusterrole.yaml
 ```
