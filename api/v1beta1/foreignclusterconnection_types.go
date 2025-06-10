@@ -69,6 +69,8 @@ type ClusterNetworkingStatus struct {
 // +kubebuilder:printcolumn:name="A-CIDR",type=string,JSONPath=`.status.foreignClusterANetworking.remappedPodCIDR`
 // +kubebuilder:printcolumn:name="B-CIDR",type=string,JSONPath=`.status.foreignClusterBNetworking.remappedPodCIDR`
 
+// +genclient
+
 // ForeignClusterConnection is the Schema for the foreignclusterconnections API.
 type ForeignClusterConnection struct {
 	metav1.TypeMeta   `json:",inline"`
