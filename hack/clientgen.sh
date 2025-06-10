@@ -10,7 +10,7 @@ SCRIPT_ROOT="/home/gsanti/myLiqo/foreign_cluster_connector"
 CODEGEN_PKG="/home/gsanti/myLiqo/code-generator"
 
 # Optional: set your module path here
-MODULE_PATH="/home/gsanti/myLiqo/foreign_cluster_connector"
+MODULE_PATH="github.com/Gabbe64/foreign_cluster_connector"
 
 # Source the kube codegen helpers
 source "${CODEGEN_PKG}/kube_codegen.sh"

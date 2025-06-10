@@ -18,10 +18,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/clientset/versioned"
-	apiv1beta1 "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/clientset/versioned/typed/api/v1beta1"
-	fakeapiv1beta1 "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/clientset/versioned/typed/api/v1beta1/fake"
-
+	clientset "github.com/Gabbe64/foreign_cluster_connector/pkg/client/clientset/versioned"
+	apiv1beta1 "github.com/Gabbe64/foreign_cluster_connector/pkg/client/clientset/versioned/typed/api/v1beta1"
+	fakeapiv1beta1 "github.com/Gabbe64/foreign_cluster_connector/pkg/client/clientset/versioned/typed/api/v1beta1/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"

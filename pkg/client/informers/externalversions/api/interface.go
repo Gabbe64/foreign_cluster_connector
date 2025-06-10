@@ -18,8 +18,8 @@ limitations under the License.
 package api
 
 import (
-	v1beta1 "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/informers/externalversions/api/v1beta1"
-	internalinterfaces "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/informers/externalversions/internalinterfaces"
+	v1beta1 "github.com/Gabbe64/foreign_cluster_connector/pkg/client/informers/externalversions/api/v1beta1"
+	internalinterfaces "github.com/Gabbe64/foreign_cluster_connector/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

@@ -18,7 +18,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	internalinterfaces "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/Gabbe64/foreign_cluster_connector/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

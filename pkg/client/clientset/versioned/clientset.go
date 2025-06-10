@@ -18,10 +18,10 @@ limitations under the License.
 package versioned
 
 import (
-	apiv1beta1 "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/clientset/versioned/typed/api/v1beta1"
 	fmt "fmt"
 	http "net/http"
 
+	apiv1beta1 "github.com/Gabbe64/foreign_cluster_connector/pkg/client/clientset/versioned/typed/api/v1beta1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

@@ -18,10 +18,10 @@ limitations under the License.
 package v1beta1
 
 import (
-	scheme "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/clientset/versioned/scheme"
 	http "net/http"
 
 	apiv1beta1 "github.com/Gabbe64/foreign_cluster_connector/api/v1beta1"
+	scheme "github.com/Gabbe64/foreign_cluster_connector/pkg/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

@@ -18,13 +18,13 @@ limitations under the License.
 package v1beta1
 
 import (
-	versioned "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/clientset/versioned"
-	internalinterfaces "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/informers/externalversions/internalinterfaces"
-	apiv1beta1 "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/listers/api/v1beta1"
 	context "context"
 	time "time"
 
 	foreignclusterconnectorapiv1beta1 "github.com/Gabbe64/foreign_cluster_connector/api/v1beta1"
+	versioned "github.com/Gabbe64/foreign_cluster_connector/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/Gabbe64/foreign_cluster_connector/pkg/client/informers/externalversions/internalinterfaces"
+	apiv1beta1 "github.com/Gabbe64/foreign_cluster_connector/pkg/client/listers/api/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

@@ -18,10 +18,10 @@ limitations under the License.
 package v1beta1
 
 import (
-	scheme "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/clientset/versioned/scheme"
 	context "context"
 
 	apiv1beta1 "github.com/Gabbe64/foreign_cluster_connector/api/v1beta1"
+	scheme "github.com/Gabbe64/foreign_cluster_connector/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

@@ -18,13 +18,13 @@ limitations under the License.
 package externalversions
 
 import (
-	versioned "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/clientset/versioned"
-	api "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/informers/externalversions/api"
-	internalinterfaces "/home/gsanti/myLiqo/foreign_cluster_connector/pkg/client/informers/externalversions/internalinterfaces"
 	reflect "reflect"
 	sync "sync"
 	time "time"
 
+	versioned "github.com/Gabbe64/foreign_cluster_connector/pkg/client/clientset/versioned"
+	api "github.com/Gabbe64/foreign_cluster_connector/pkg/client/informers/externalversions/api"
+	internalinterfaces "github.com/Gabbe64/foreign_cluster_connector/pkg/client/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
