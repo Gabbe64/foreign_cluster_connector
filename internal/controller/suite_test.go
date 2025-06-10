@@ -22,9 +22,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	networkingv1beta1 "github.com/Gabbe64/foreign_cluster_connector/api/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	networkingv1beta1 "github.com/scal110/foreign_cluster_connector/api/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"

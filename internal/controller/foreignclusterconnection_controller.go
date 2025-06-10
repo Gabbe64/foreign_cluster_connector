@@ -19,21 +19,22 @@ package controller
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	networkingv1alpha1 "github.com/Gabbe64/foreign_cluster_connector/api/v1beta1"
 	ipamv1alpha1 "github.com/liqotech/liqo/apis/ipam/v1alpha1"
 	"github.com/liqotech/liqo/pkg/liqoctl/factory"
 	"github.com/liqotech/liqo/pkg/liqoctl/network"
 	"github.com/liqotech/liqo/pkg/liqoctl/output"
-	networkingv1alpha1 "github.com/scal110/foreign_cluster_connector/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
-	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"time"
 )
 
 // ForeignClusterConnectionReconciler reconciles a ForeignClusterConnection object

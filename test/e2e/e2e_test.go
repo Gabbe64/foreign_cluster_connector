@@ -24,9 +24,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Gabbe64/foreign_cluster_connector/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/scal110/foreign_cluster_connector/test/utils"
 )
 
 // namespace where the project is deployed in
