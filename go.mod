@@ -1,4 +1,4 @@
-module github.com/scal110/foreign_cluster_connector
+module github.com/Gabbe64/foreign_cluster_connector
 
 go 1.24.1
 
